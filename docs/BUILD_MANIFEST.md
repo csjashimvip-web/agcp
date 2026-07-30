@@ -1,34 +1,34 @@
-# Phase 5 Build Manifest
+# Phase 7 Build Manifest
 
 - Build date: 2026-07-30
 - Platform: Araabi Global Commerce Platform (AGCP)
-- Phase: 5 — Smart Supplier Engine
-- Upgrade base: Phase 4 Commerce Core package
+- Phase: 7 — Multi-Tenant SaaS and Plugin Marketplace
+- Upgrade base: Phase 6 Rules, Fraud and Dynamic Pricing
 - Runtime baseline: Laravel 13 / PHP 8.4 / Next.js 16 / React 19.2 / Node.js 22 / MySQL 8.4 / Redis / Nginx
 
 ## Static validation completed
 
 - All backend PHP files passed `php -l`.
-- JSON documents parsed successfully.
-- YAML documents parsed successfully.
-- Shell scripts passed `bash -n`.
+- Local application class references were resolved against declared classes.
+- JSON and YAML documents parsed successfully.
+- Shell scripts passed `bash -n` where applicable.
 - TypeScript and TSX source files passed compiler-based syntactic parsing.
-- Migration foreign-key order and tenant-scoping paths received manual code review.
-- Routing, failover, polling, health scoring and refund paths received manual code review.
+- Git diff whitespace validation passed.
+- Full and patch ZIP integrity checks are performed during artifact packaging.
 
-## Automated tests included
+## Phase 7 automated tests included
 
-The package includes feature tests for:
-
-- successful supplier routing and completion;
-- automatic failover after a submission failure;
-- item-level wallet refund when all suppliers fail;
-- cancellation-race protection after supplier work is created;
-- all prior commerce, wallet and identity tests.
+- subscription entitlement and limit resolution;
+- locked monthly quota enforcement;
+- encrypted plugin secrets and lifecycle events;
+- isolated tenant provisioning with owner membership and tenant roles;
+- Phase 6 Rules/Fraud regression verification;
+- Phase 5 Supplier Engine regression verification;
+- frontend TypeScript verification in the Docker runtime.
 
 ## Runtime validation required on the receiving machine
 
-The artifact environment does not include the project's Composer dependencies or Docker daemon. Its internal npm mirror also does not contain `@laravel/passkeys`. Therefore, these checks are intentionally delegated to the user's verified Docker Desktop environment:
+The artifact environment does not include Docker or the project's Composer dependency tree. Its internal npm mirror also lacks some project packages. Therefore these checks are intentionally delegated to the user's verified Docker Desktop environment:
 
 - full Docker image build;
 - Composer dependency boot;
@@ -36,6 +36,4 @@ The artifact environment does not include the project's Composer dependencies or
 - Laravel feature-test execution;
 - Next.js full typecheck and production build.
 
-Run `scripts/upgrade-phase5.ps1`, then `scripts/verify-phase5.ps1`.
-
-- Phase 6 rules, fraud and dynamic pricing module
+Run `scripts/upgrade-phase7.ps1`, then `scripts/verify-phase7.ps1`.

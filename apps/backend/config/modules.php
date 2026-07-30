@@ -10,4 +10,6 @@ return ['providers' => [
     Modules\Suppliers\Infrastructure\SupplierServiceProvider::class,
     Modules\Rules\Infrastructure\RulesServiceProvider::class,
     Modules\Fraud\Infrastructure\FraudServiceProvider::class,
+    Modules\SaaS\Infrastructure\SaaSServiceProvider::class,
+    Modules\Plugins\Infrastructure\PluginsServiceProvider::class,
 ]];

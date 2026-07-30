@@ -25,6 +25,6 @@ class DatabaseSeeder extends Seeder
             'verified_at' => now(),
         ]);
 
-        $this->call([IdentitySeeder::class, CommerceSeeder::class, SupplierSeeder::class, RulesFraudSeeder::class]);
+        $this->call([IdentitySeeder::class, CommerceSeeder::class, SupplierSeeder::class, RulesFraudSeeder::class, SaasPluginSeeder::class]);
     }
 }

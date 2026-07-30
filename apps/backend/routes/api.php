@@ -30,6 +30,11 @@ use Modules\Rules\Http\Controllers\PricingQuoteController;
 use Modules\Rules\Http\Controllers\Admin\AdminRuleController;
 use Modules\Fraud\Http\Controllers\FraudAssessmentController;
 use Modules\Fraud\Http\Controllers\Admin\AdminFraudAssessmentController;
+use Modules\SaaS\Http\Controllers\TenantConfigurationController;
+use Modules\SaaS\Http\Controllers\Admin\AdminSaasController;
+use Modules\SaaS\Http\Controllers\Admin\AdminTenantProfileController;
+use Modules\SaaS\Http\Controllers\Admin\AdminTenantDomainController;
+use Modules\Plugins\Http\Controllers\Admin\AdminPluginController;
 
 Route::prefix('v1')->group(function (): void {
     Route::get('/health', HealthController::class)->name('api.v1.health');
@@ -38,6 +43,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/catalog', [CatalogController::class, 'index'])->name('api.v1.catalog.index');
         Route::get('/catalog/categories', [CatalogController::class, 'categories'])->name('api.v1.catalog.categories');
         Route::get('/catalog/{slug}', [CatalogController::class, 'show'])->name('api.v1.catalog.show');
+        Route::get('/tenant/configuration', TenantConfigurationController::class)->name('api.v1.tenant.configuration');
     });
 
     Route::middleware(['tenant', 'throttle:api'])->get('/platform', fn () => response()->json(['data' => [
@@ -49,6 +55,7 @@ Route::prefix('v1')->group(function (): void {
         'commerce_phase' => 'phase-4',
         'supplier_phase' => 'phase-5',
         'rules_fraud_pricing_phase' => 'phase-6',
+        'saas_plugins_phase' => 'phase-7',
     ]]))->name('api.v1.platform');
 
     Route::prefix('auth')->middleware(['tenant', 'auth:sanctum', 'account.active', 'auth.session', 'throttle:api'])->group(function (): void {
@@ -161,5 +168,22 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/fraud/assessments', [AdminFraudAssessmentController::class, 'index'])->middleware('permission:fraud.admin.access')->name('api.v1.admin.fraud.assessments.index');
         Route::post('/fraud/assessments/{assessment}/approve', [AdminFraudAssessmentController::class, 'approve'])->middleware(['permission:fraud.assessments.review', 'throttle:sensitive'])->name('api.v1.admin.fraud.assessments.approve');
         Route::post('/fraud/assessments/{assessment}/reject', [AdminFraudAssessmentController::class, 'reject'])->middleware(['permission:fraud.assessments.review', 'throttle:sensitive'])->name('api.v1.admin.fraud.assessments.reject');
+
+
+        Route::get('/saas', [AdminSaasController::class, 'index'])->middleware('permission:saas.admin.access')->name('api.v1.admin.saas.index');
+        Route::post('/saas/plans', [AdminSaasController::class, 'storePlan'])->middleware(['permission:saas.plans.manage', 'throttle:sensitive'])->name('api.v1.admin.saas.plans.store');
+        Route::post('/saas/tenants', [AdminSaasController::class, 'storeTenant'])->middleware(['permission:saas.platform.manage', 'throttle:sensitive'])->name('api.v1.admin.saas.tenants.store');
+        Route::put('/saas/tenants/{tenant}/subscription', [AdminSaasController::class, 'updateSubscription'])->middleware(['permission:saas.subscriptions.manage', 'throttle:sensitive'])->name('api.v1.admin.saas.subscriptions.update');
+        Route::get('/tenant-profile', [AdminTenantProfileController::class, 'show'])->middleware('permission:saas.tenant.manage')->name('api.v1.admin.tenant-profile.show');
+        Route::patch('/tenant-profile', [AdminTenantProfileController::class, 'update'])->middleware(['permission:saas.tenant.manage', 'throttle:sensitive'])->name('api.v1.admin.tenant-profile.update');
+        Route::get('/tenant-domains', [AdminTenantDomainController::class, 'index'])->middleware('permission:saas.tenant.manage')->name('api.v1.admin.tenant-domains.index');
+        Route::post('/tenant-domains', [AdminTenantDomainController::class, 'store'])->middleware(['permission:saas.tenant.manage', 'feature:custom_domains', 'throttle:sensitive'])->name('api.v1.admin.tenant-domains.store');
+        Route::post('/tenant-domains/{domain}/verify', [AdminTenantDomainController::class, 'verify'])->middleware(['permission:saas.tenant.manage', 'feature:custom_domains', 'throttle:sensitive'])->name('api.v1.admin.tenant-domains.verify');
+        Route::post('/tenant-domains/{domain}/primary', [AdminTenantDomainController::class, 'primary'])->middleware(['permission:saas.tenant.manage', 'feature:custom_domains', 'throttle:sensitive'])->name('api.v1.admin.tenant-domains.primary');
+        Route::get('/plugins', [AdminPluginController::class, 'index'])->middleware('permission:plugins.marketplace.view')->name('api.v1.admin.plugins.index');
+        Route::post('/plugins/{plugin}/install', [AdminPluginController::class, 'install'])->middleware(['permission:plugins.manage', 'feature:plugins.marketplace', 'throttle:sensitive'])->name('api.v1.admin.plugins.install');
+        Route::patch('/plugin-installations/{installation}', [AdminPluginController::class, 'configure'])->middleware(['permission:plugins.manage', 'feature:plugins.marketplace', 'throttle:sensitive'])->name('api.v1.admin.plugins.configure');
+        Route::post('/plugin-installations/{installation}/enable', [AdminPluginController::class, 'enable'])->middleware(['permission:plugins.manage', 'feature:plugins.marketplace', 'throttle:sensitive'])->name('api.v1.admin.plugins.enable');
+        Route::post('/plugin-installations/{installation}/disable', [AdminPluginController::class, 'disable'])->middleware(['permission:plugins.manage', 'throttle:sensitive'])->name('api.v1.admin.plugins.disable');
     });
 });

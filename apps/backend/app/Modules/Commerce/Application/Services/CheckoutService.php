@@ -14,6 +14,7 @@ use Modules\Fraud\Application\Services\FraudRiskEngine;
 use Modules\Fraud\Domain\Enums\FraudDecision;
 use Modules\Fraud\Infrastructure\Models\FraudRiskAssessment;
 use Modules\Rules\Application\Services\DynamicPricingService;
+use Modules\SaaS\Application\Services\UsageQuotaService;
 use Modules\Shared\Application\Outbox\OutboxRecorder;
 use Modules\Wallet\Application\Services\LedgerService;
 use Modules\Wallet\Application\Services\WalletService;
@@ -30,6 +31,7 @@ final class CheckoutService
         private readonly OutboxRecorder $outbox,
         private readonly AuditLogger $audit,
         private readonly FraudRiskEngine $fraud,
+        private readonly UsageQuotaService $usage,
     ) {}
 
     public function checkout(User $user,string $tenantId,string $cartId,string $walletId,?string $idempotencyKey,array $riskContext=[]): Order
@@ -46,6 +48,7 @@ final class CheckoutService
             $risk=$this->fraud->assessCheckout($user,$tenantId,$subtotal,$cart->id,['currency'=>$cart->currency]+$riskContext);
             if($risk->decision===FraudDecision::Block)throw ValidationException::withMessages(['risk'=>'This checkout was blocked by the risk engine. Assessment: '.$risk->assessmentId]);
             $onHold=$risk->decision===FraudDecision::Review;
+            $this->usage->consume($tenantId, 'orders_monthly', 1, ['cart_id' => $cart->id, 'user_id' => $user->id]);
             $order=Order::query()->create([
                 'tenant_id'=>$tenantId,'user_id'=>$user->id,'wallet_id'=>$wallet->id,'number'=>$this->number(),'status'=>'confirmed','payment_status'=>'paid','fulfillment_status'=>$onHold?'on_hold':'unfulfilled',
                 'currency'=>$cart->currency,'subtotal_minor'=>$baseSubtotal,'discount_minor'=>max(0,$baseSubtotal-$subtotal),'surcharge_minor'=>max(0,$subtotal-$baseSubtotal),'total_minor'=>$subtotal,'idempotency_key_hash'=>$hash,'placed_at'=>now(),

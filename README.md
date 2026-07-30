@@ -1,63 +1,57 @@
-# Araabi Global Commerce Platform — Phase 6
+# Araabi Global Commerce Platform — Phase 7
 
-AGCP Phase 5 adds the Smart Supplier Engine on top of the verified Identity, Enterprise Wallet and Commerce Core foundations.
+AGCP is a modular, tenant-aware digital and physical commerce platform. Phase 7 adds the SaaS control plane and approved plugin marketplace on top of Identity, Wallet, Commerce, Supplier, Rules, Fraud and Dynamic Pricing foundations.
 
-## Capabilities
+## Phase 7 capabilities
 
-- Tenant-scoped supplier accounts and encrypted credentials
-- Supplier-to-catalog service mappings
-- Balanced, cheapest, fastest, highest-success and priority routing
-- Auditable candidate score snapshots and selection reasons
-- Provider adapter registry
-- Offline sandbox provider for local verification
-- Queue-based automatic submission
-- Scheduled supplier status polling
-- Health probes, latency and success-rate metrics
-- Consecutive-failure circuit protection
-- Automatic supplier failover
-- Item-level automatic wallet refund after terminal failure
-- Supplier administration dashboard
+- Multi-tenant plan catalog and subscription lifecycle
+- Nested feature entitlements and numeric quotas
+- Locked monthly usage counters
+- Tenant provisioning with owner membership and tenant-admin role
+- White-label branding profiles
+- Custom-domain verification lifecycle
+- Public tenant configuration API for headless clients
+- Approved manifest-based plugin marketplace
+- Encrypted tenant plugin configuration
+- Install, configure, enable and disable lifecycle events
+- Platform-only tenant and subscription controls
+- Tenant-scoped branding, domains and plugin administration
 
-## Upgrade an existing Phase 4 project
+## Security model
 
-Extract the Phase 5 upgrade patch and copy all files into `C:\Projects\agcp`, choosing **Replace All**. Keep the existing `.env`.
+Phase 7 does not accept arbitrary PHP, JavaScript, Composer, NPM or ZIP plugin uploads. Marketplace records point only to approved provider keys already reviewed and shipped with AGCP. Secret configuration values use Laravel encrypted casts and are never returned by the API.
+
+## Upgrade Phase 6 → Phase 7
+
+Extract `agcp-phase7-upgrade-patch.zip` into `C:\Projects\agcp`, choose **Replace All**, preserve the existing `.env`, then run:
 
 ```powershell
 cd C:\Projects\agcp
 Set-ExecutionPolicy -Scope Process Bypass
-.\scripts\upgrade-phase5.ps1
+.\scripts\upgrade-phase7.ps1
 ```
 
 Verify:
 
 ```powershell
-.\scripts\verify-phase5.ps1
+.\scripts\verify-phase7.ps1
 ```
 
 ## URLs
 
-- Home: `http://localhost:8080`
-- Catalog: `http://localhost:8080/catalog`
-- Orders: `http://localhost:8080/orders`
-- Supplier administration: `http://localhost:8080/admin/suppliers`
+- SaaS and plugin administration: `http://localhost:8080/admin/saas`
+- Tenant configuration API: `http://localhost:8080/api/v1/tenant/configuration`
+- Identity administration: `http://localhost:8080/admin`
 - Commerce administration: `http://localhost:8080/admin/commerce`
-- API health: `http://localhost:8080/api/v1/health`
+- Supplier administration: `http://localhost:8080/admin/suppliers`
+- Rules and fraud: `http://localhost:8080/admin/rules`
 
-## Demonstration flow
+## Seeded plans
 
-1. Sign in as the administrator and confirm 2FA.
-2. Open Supplier administration and inspect the seeded Fast and Economy sandbox suppliers.
-3. Run a health check from the supplier dashboard.
-4. Approve customer balance from Wallet administration.
-5. Sign in as the customer and purchase **IMEI Status Check**.
-6. The committed order is published through the transactional outbox and queued for supplier routing.
-7. Open Orders and Supplier administration to inspect fulfillment status, routing evidence and supplier reference.
+- Starter
+- Growth
+- Enterprise
 
-To test failover, set `sandbox_fail_submissions` to `true` in one sandbox supplier's metadata through code or an API client. To test automatic refund, configure every eligible sandbox supplier to fail.
+The existing `araabi-global` tenant receives the Enterprise plan so all previously delivered Phase 1–6 capabilities remain available after upgrade.
 
-See `docs/SMART_SUPPLIER_ENGINE.md` and `docs/PHASE_5_REPORT.md`.
-
-
-## Phase 6
-
-Rules, fraud scoring and dynamic pricing are available at `http://localhost:8080/admin/rules`. Use `scripts/upgrade-phase6.ps1` when upgrading from Phase 5 and `scripts/verify-phase6.ps1` for verification.
+See `docs/SAAS_AND_PLUGIN_MARKETPLACE.md` and `docs/PHASE_7_REPORT.md`.

@@ -10,6 +10,7 @@ use Modules\Identity\Http\Middleware\EnsureAccountActive;
 use Modules\Identity\Http\Middleware\EnsureAdminTwoFactor;
 use Modules\Identity\Http\Middleware\RequirePermission;
 use Modules\Identity\Http\Middleware\TrackAuthenticatedSession;
+use Modules\SaaS\Http\Middleware\RequireTenantFeature;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -28,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => RequirePermission::class,
             'admin.2fa' => EnsureAdminTwoFactor::class,
             'auth.session' => TrackAuthenticatedSession::class,
+            'feature' => RequireTenantFeature::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

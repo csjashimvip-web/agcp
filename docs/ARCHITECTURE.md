@@ -98,3 +98,7 @@ External supplier
 ```
 
 Terminal supplier failure calls the Wallet application services to post an item-level balanced refund. This preserves dependency direction: Suppliers may orchestrate Commerce and Wallet application services, while provider-specific code remains inside supplier adapters.
+
+## Phase 7: SaaS control plane and approved plugins
+
+The tenant resolver remains the mandatory request boundary. Phase 7 adds subscription-backed entitlements, quota counters, tenant branding, domain verification metadata and a manifest-only plugin catalog. Executable plugin uploads are prohibited; manifests can activate only provider keys already reviewed and shipped with the application. This preserves modular-monolith safety while allowing later provider marketplace expansion.
