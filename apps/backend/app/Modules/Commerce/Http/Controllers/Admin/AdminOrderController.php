@@ -13,12 +13,12 @@ final class AdminOrderController extends Controller
     public function __construct(private readonly OrderService $orders){}
     public function index(Request $request,TenantContext $tenant)
     {
-        $query=Order::query()->with(['user','items'])->where('tenant_id',$tenant->requireId());
+        $query=Order::query()->with(['user','items.supplierOrder'])->where('tenant_id',$tenant->requireId());
         if($request->filled('status'))$query->where('status',$request->string('status'));
         return OrderResource::collection($query->latest()->paginate(30));
     }
     public function show(Order $order,TenantContext $tenant):OrderResource
-    { abort_unless($order->tenant_id===$tenant->requireId(),404); return new OrderResource($order->load(['user','items','statusHistory'])); }
+    { abort_unless($order->tenant_id===$tenant->requireId(),404); return new OrderResource($order->load(['user','items.supplierOrder','statusHistory'])); }
     public function transition(Request $request,Order $order,TenantContext $tenant):OrderResource
     {
         abort_unless($order->tenant_id===$tenant->requireId(),404);

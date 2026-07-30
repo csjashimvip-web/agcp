@@ -44,8 +44,8 @@ class CommerceSeeder extends Seeder
                     'item' => [
                         'type' => 'service', 'name' => 'IMEI Status Check', 'slug' => 'imei-status-check', 'sku' => 'SRV-IMEI-CHECK',
                         'summary' => 'Submit an IMEI number for a structured device-status report.',
-                        'description' => 'A manual fulfillment service ready for supplier automation in Phase 5.',
-                        'status' => 'active', 'fulfillment_mode' => 'manual', 'inventory_tracking' => false, 'allow_backorder' => true,
+                        'description' => 'An automatically routed supplier service with auditable scoring and failover.',
+                        'status' => 'active', 'fulfillment_mode' => 'supplier_api', 'inventory_tracking' => false, 'allow_backorder' => true,
                         'service_schema' => ['fields' => [['name' => 'imei', 'label' => 'IMEI number', 'type' => 'text', 'required' => true]]],
                     ],
                     'variant' => ['name' => 'Standard report', 'sku' => 'SRV-IMEI-CHECK-STD'],

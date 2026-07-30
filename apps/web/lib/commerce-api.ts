@@ -19,7 +19,7 @@ export type Cart={id:string;currency:string;status:string;subtotal_minor:number;
 export type Order={
   id:string;number:string;status:string;payment_status:string;fulfillment_status:string;currency:string;subtotal_minor:number;discount_minor:number;total_minor:number;total:string;
   placed_at:string|null;canceled_at:string|null;user?:{id:string;name:string;email:string};
-  items?:Array<{id:string;item_name:string;variant_name:string|null;sku:string;item_type:string;quantity:number;unit_price_minor:number;total_minor:number;status:string;configuration:Record<string,string>|null}>;
+  items?:Array<{id:string;item_name:string;variant_name:string|null;sku:string;item_type:string;quantity:number;unit_price_minor:number;total_minor:number;status:string;configuration:Record<string,string>|null;supplier_fulfillment?:{id:string;status:string;supplier_reference:string|null;result:Record<string,unknown>|null;error_code:string|null;error_message:string|null}|null}>;
   history?:Array<{from:string|null;to:string;note:string|null;created_at:string|null}>;
 };
 type Collection<T>={data:T[];links?:unknown;meta?:unknown};

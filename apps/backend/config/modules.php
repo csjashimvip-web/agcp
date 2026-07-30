@@ -7,4 +7,5 @@ return ['providers' => [
     Modules\Identity\Infrastructure\IdentityServiceProvider::class,
     Modules\Wallet\Infrastructure\WalletServiceProvider::class,
     Modules\Commerce\Infrastructure\CommerceServiceProvider::class,
+    Modules\Suppliers\Infrastructure\SupplierServiceProvider::class,
 ]];

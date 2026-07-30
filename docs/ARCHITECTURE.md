@@ -2,7 +2,7 @@
 
 ## Architecture style
 
-AGCP is an event-driven modular monolith with explicit extraction boundaries. Phase 3 activates the Wallet module while preserving the Phase 2 identity controls and the Phase 1 tenancy, audit, outbox, provider-contract, and observability foundations.
+AGCP is an event-driven modular monolith with explicit extraction boundaries. Phase 5 activates the Smart Supplier Engine while preserving the Identity, Wallet, Commerce, tenancy, audit, outbox and observability foundations.
 
 ## Runtime request path
 
@@ -30,7 +30,7 @@ Wallet          Ledger and account boundary (Phase 3)
 Payments        Provider-neutral payment boundary
 Products        Physical and digital catalogue boundary
 Orders          Checkout and lifecycle boundary
-Suppliers       Supplier adapters, scoring, and failover boundary
+Suppliers       Provider adapters, scoring, health, queues, failover, polling, and refund orchestration
 Notifications   Email, SMS, push, and webhook boundary
 Rules           Versioned condition/action boundary
 Fraud           Risk-signal and decision boundary
@@ -79,4 +79,22 @@ Queue consumers and notifications
 
 ## Phase 4 commerce boundary
 
-The Commerce module now owns catalog, variants, price lists, inventory, carts and orders. It calls the Wallet module through application services for balanced payment and refund journals. Supplier submission remains outside this boundary until Phase 5. See `COMMERCE_CORE.md`.
+The Commerce module now owns catalog, variants, price lists, inventory, carts and orders. It calls the Wallet module through application services for balanced payment and refund journals. Supplier submission is now consumed by the Phase 5 Suppliers module through committed outbox events. See `COMMERCE_CORE.md` and `SMART_SUPPLIER_ENGINE.md`.
+
+## Phase 5 supplier boundary
+
+The Suppliers module now owns provider accounts, encrypted integration settings, catalog mappings, routing profiles, health observations, supplier orders, attempt history and routing decisions. Commerce publishes an order event but does not know supplier-specific APIs.
+
+```text
+Commerce checkout
+      ↓ committed outbox event
+Supplier event listener
+      ↓
+Supplier routing engine
+      ↓
+Provider contract / adapter
+      ↓
+External supplier
+```
+
+Terminal supplier failure calls the Wallet application services to post an item-level balanced refund. This preserves dependency direction: Suppliers may orchestrate Commerce and Wallet application services, while provider-specific code remains inside supplier adapters.

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Commerce\Domain\Enums\OrderStatus;
 use Modules\Wallet\Infrastructure\Models\LedgerTransaction;
 use Modules\Wallet\Infrastructure\Models\Wallet;
+use Modules\Suppliers\Infrastructure\Models\SupplierOrder;
 final class Order extends Model
 {
     use HasUuids;
@@ -25,4 +26,5 @@ final class Order extends Model
     public function items(): HasMany { return $this->hasMany(OrderItem::class); }
     public function statusHistory(): HasMany { return $this->hasMany(OrderStatusHistory::class); }
     public function reservations(): HasMany { return $this->hasMany(InventoryReservation::class); }
+    public function supplierOrders(): HasMany { return $this->hasMany(SupplierOrder::class); }
 }

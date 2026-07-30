@@ -1,9 +1,9 @@
-# Phase 4 Build Manifest
+# Phase 5 Build Manifest
 
 - Build date: 2026-07-30
 - Platform: Araabi Global Commerce Platform (AGCP)
-- Phase: 4 — Commerce Core
-- Upgrade base: Phase 3 Hotfix 1 Enterprise Wallet package
+- Phase: 5 — Smart Supplier Engine
+- Upgrade base: Phase 4 Commerce Core package
 - Runtime baseline: Laravel 13 / PHP 8.4 / Next.js 16 / React 19.2 / Node.js 22 / MySQL 8.4 / Redis / Nginx
 
 ## Static validation completed
@@ -13,22 +13,22 @@
 - YAML documents parsed successfully.
 - Shell scripts passed `bash -n`.
 - TypeScript and TSX source files passed compiler-based syntactic parsing.
-- Catalog, pricing, inventory, checkout, ledger integration and order transition paths received manual code review.
+- Migration foreign-key order and tenant-scoping paths received manual code review.
+- Routing, failover, polling, health scoring and refund paths received manual code review.
 
 ## Automated tests included
 
 The package includes feature tests for:
 
-- wallet-funded checkout and balanced ledger debit;
-- inventory reservation;
-- checkout idempotency;
-- cancellation refund and inventory release;
-- required service configuration;
-- all prior identity and wallet tests.
+- successful supplier routing and completion;
+- automatic failover after a submission failure;
+- item-level wallet refund when all suppliers fail;
+- cancellation-race protection after supplier work is created;
+- all prior commerce, wallet and identity tests.
 
 ## Runtime validation required on the receiving machine
 
-Docker is unavailable inside the artifact build environment. Therefore, the following are intentionally left for the user's verified Docker Desktop environment:
+The artifact environment does not include the project's Composer dependencies or Docker daemon. Its internal npm mirror also does not contain `@laravel/passkeys`. Therefore, these checks are intentionally delegated to the user's verified Docker Desktop environment:
 
 - full Docker image build;
 - Composer dependency boot;
@@ -36,4 +36,4 @@ Docker is unavailable inside the artifact build environment. Therefore, the foll
 - Laravel feature-test execution;
 - Next.js full typecheck and production build.
 
-Run `scripts/upgrade-phase4.ps1`, then `scripts/verify-phase4.ps1`.
+Run `scripts/upgrade-phase5.ps1`, then `scripts/verify-phase5.ps1`.

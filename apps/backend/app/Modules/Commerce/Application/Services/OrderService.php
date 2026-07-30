@@ -23,9 +23,14 @@ final class OrderService
     public function cancel(Order $order, User $actor, string $note = 'Customer canceled order.'): Order
     {
         return DB::transaction(function () use ($order, $actor, $note): Order {
-            $locked = Order::query()->with(['wallet.account','items'])->whereKey($order->id)->lockForUpdate()->firstOrFail();
+            $locked = Order::query()->with(['wallet.account','items','supplierOrders'])->whereKey($order->id)->lockForUpdate()->firstOrFail();
             if (!in_array($locked->status, [OrderStatus::Pending, OrderStatus::Confirmed], true)) {
                 throw ValidationException::withMessages(['order'=>'Only pending or confirmed orders can be canceled.']);
+            }
+            if ($locked->supplierOrders->isNotEmpty()) {
+                throw ValidationException::withMessages([
+                    'order' => 'Automatic supplier fulfillment has started. This order can no longer be canceled from the commerce workflow.',
+                ]);
             }
             $this->inventory->release($locked);
             if ($locked->payment_status === 'paid') {
@@ -50,7 +55,12 @@ final class OrderService
     public function transition(Order $order, User $actor, OrderStatus $to, ?string $note): Order
     {
         return DB::transaction(function () use ($order, $actor, $to, $note): Order {
-            $locked=Order::query()->with('items')->whereKey($order->id)->lockForUpdate()->firstOrFail();
+            $locked=Order::query()->with(['items','supplierOrders'])->whereKey($order->id)->lockForUpdate()->firstOrFail();
+            if ($locked->supplierOrders->isNotEmpty()) {
+                throw ValidationException::withMessages([
+                    'status' => 'Supplier-managed orders are transitioned automatically by the supplier engine.',
+                ]);
+            }
             $allowed=[
                 'confirmed'=>['processing','canceled'],
                 'processing'=>['completed'],

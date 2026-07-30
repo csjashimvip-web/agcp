@@ -22,6 +22,10 @@ use Modules\Wallet\Http\Controllers\Admin\AdminWalletController;
 use Modules\Wallet\Http\Controllers\Admin\WalletAdjustmentController;
 use Modules\Wallet\Http\Controllers\DepositController;
 use Modules\Wallet\Http\Controllers\WalletController;
+use Modules\Suppliers\Http\Controllers\Admin\AdminSupplierController;
+use Modules\Suppliers\Http\Controllers\Admin\AdminSupplierOrderController;
+use Modules\Suppliers\Http\Controllers\Admin\AdminSupplierRoutingProfileController;
+use Modules\Suppliers\Http\Controllers\Admin\AdminSupplierServiceController;
 
 Route::prefix('v1')->group(function (): void {
     Route::get('/health', HealthController::class)->name('api.v1.health');
@@ -39,6 +43,7 @@ Route::prefix('v1')->group(function (): void {
         'identity_phase' => 'phase-2',
         'wallet_phase' => 'phase-3',
         'commerce_phase' => 'phase-4',
+        'supplier_phase' => 'phase-5',
     ]]))->name('api.v1.platform');
 
     Route::prefix('auth')->middleware(['tenant', 'auth:sanctum', 'account.active', 'auth.session', 'throttle:api'])->group(function (): void {
@@ -124,5 +129,19 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/commerce/orders', [AdminOrderController::class, 'index'])->middleware('permission:commerce.orders.manage')->name('api.v1.admin.commerce.orders');
         Route::get('/commerce/orders/{order}', [AdminOrderController::class, 'show'])->middleware('permission:commerce.orders.manage')->name('api.v1.admin.commerce.orders.show');
         Route::post('/commerce/orders/{order}/transition', [AdminOrderController::class, 'transition'])->middleware(['permission:commerce.orders.manage', 'throttle:sensitive'])->name('api.v1.admin.commerce.orders.transition');
+
+
+        Route::get('/supplier-routing-profile', [AdminSupplierRoutingProfileController::class, 'show'])->middleware('permission:supplier.admin.access')->name('api.v1.admin.supplier-routing-profile.show');
+        Route::put('/supplier-routing-profile', [AdminSupplierRoutingProfileController::class, 'update'])->middleware(['permission:supplier.accounts.manage', 'throttle:sensitive'])->name('api.v1.admin.supplier-routing-profile.update');
+        Route::get('/suppliers/providers', [AdminSupplierController::class, 'providers'])->middleware('permission:supplier.admin.access')->name('api.v1.admin.suppliers.providers');
+        Route::get('/suppliers', [AdminSupplierController::class, 'index'])->middleware('permission:supplier.admin.access')->name('api.v1.admin.suppliers.index');
+        Route::post('/suppliers', [AdminSupplierController::class, 'store'])->middleware(['permission:supplier.accounts.manage', 'throttle:sensitive'])->name('api.v1.admin.suppliers.store');
+        Route::patch('/suppliers/{supplier}', [AdminSupplierController::class, 'update'])->middleware(['permission:supplier.accounts.manage', 'throttle:sensitive'])->name('api.v1.admin.suppliers.update');
+        Route::post('/suppliers/{supplier}/health-check', [AdminSupplierController::class, 'check'])->middleware(['permission:supplier.health.manage', 'throttle:sensitive'])->name('api.v1.admin.suppliers.health-check');
+        Route::post('/suppliers/{supplier}/services', [AdminSupplierServiceController::class, 'store'])->middleware(['permission:supplier.services.manage', 'throttle:sensitive'])->name('api.v1.admin.suppliers.services.store');
+        Route::patch('/supplier-services/{service}', [AdminSupplierServiceController::class, 'update'])->middleware(['permission:supplier.services.manage', 'throttle:sensitive'])->name('api.v1.admin.supplier-services.update');
+        Route::get('/supplier-orders', [AdminSupplierOrderController::class, 'index'])->middleware('permission:supplier.orders.manage')->name('api.v1.admin.supplier-orders.index');
+        Route::get('/supplier-orders/{supplierOrder}', [AdminSupplierOrderController::class, 'show'])->middleware('permission:supplier.orders.manage')->name('api.v1.admin.supplier-orders.show');
+        Route::post('/supplier-orders/{supplierOrder}/retry', [AdminSupplierOrderController::class, 'retry'])->middleware(['permission:supplier.orders.manage', 'throttle:sensitive'])->name('api.v1.admin.supplier-orders.retry');
     });
 });

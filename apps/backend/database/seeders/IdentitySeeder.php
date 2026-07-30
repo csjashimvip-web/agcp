@@ -44,6 +44,11 @@ class IdentitySeeder extends Seeder
             ['slug' => 'commerce.pricing.manage', 'name' => 'Manage price lists', 'group' => 'Commerce'],
             ['slug' => 'commerce.inventory.manage', 'name' => 'Manage inventory', 'group' => 'Commerce'],
             ['slug' => 'commerce.orders.manage', 'name' => 'Manage tenant orders', 'group' => 'Commerce'],
+            ['slug' => 'supplier.admin.access', 'name' => 'Access supplier administration', 'group' => 'Suppliers'],
+            ['slug' => 'supplier.accounts.manage', 'name' => 'Manage supplier accounts', 'group' => 'Suppliers'],
+            ['slug' => 'supplier.services.manage', 'name' => 'Manage supplier service mappings', 'group' => 'Suppliers'],
+            ['slug' => 'supplier.orders.manage', 'name' => 'Manage supplier orders and retries', 'group' => 'Suppliers'],
+            ['slug' => 'supplier.health.manage', 'name' => 'Run supplier health checks', 'group' => 'Suppliers'],
         ];
 
         foreach ($definitions as $definition) {
@@ -68,6 +73,7 @@ class IdentitySeeder extends Seeder
             'wallet.adjustments.request', 'wallet.adjustments.approve', 'wallet.ledger.view',
             'commerce.catalog.view', 'commerce.cart.manage', 'commerce.checkout', 'commerce.orders.view',
             'commerce.admin.access', 'commerce.catalog.manage', 'commerce.pricing.manage', 'commerce.inventory.manage', 'commerce.orders.manage',
+            'supplier.admin.access', 'supplier.accounts.manage', 'supplier.services.manage', 'supplier.orders.manage', 'supplier.health.manage',
         ])->pluck('id')->all());
 
         $customer = Role::query()->firstOrCreate(

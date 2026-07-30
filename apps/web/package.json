@@ -1,6 +1,6 @@
 {
   "name": "agcp-web",
-  "version": "4.0.0-phase4",
+  "version": "5.0.0-phase5",
   "private": true,
   "engines": {
     "node": ">=22.0.0"

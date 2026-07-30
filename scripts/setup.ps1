@@ -126,7 +126,7 @@ if (-not (Test-Path ".env")) {
     Write-Host "Generated secure local .env file." -ForegroundColor Green
 } else {
     Write-Host "Using and upgrading the existing .env file." -ForegroundColor Cyan
-    Set-EnvValue "APP_VERSION" "4.0.0-phase4"
+    Set-EnvValue "APP_VERSION" "5.0.0-phase5"
     Set-EnvValue "SANCTUM_STATEFUL_DOMAINS" "localhost:8080,localhost,127.0.0.1:8080,127.0.0.1" -OnlyIfMissing
     Set-EnvValue "FORTIFY_PREFIX" "api/v1/auth" -OnlyIfMissing
     Set-EnvValue "PASSKEYS_ALLOWED_ORIGINS" "http://localhost:8080" -OnlyIfMissing
@@ -135,6 +135,7 @@ if (-not (Test-Path ".env")) {
     Set-EnvValue "MAIL_MAILER" "log" -OnlyIfMissing
     Set-EnvValue "MAIL_FROM_ADDRESS" "noreply@localhost.test" -OnlyIfMissing
     Set-EnvValue "MAIL_FROM_NAME" '"Araabi Global"' -OnlyIfMissing
+    Set-EnvValue "SUPPLIER_POLL_BATCH_SIZE" "100" -OnlyIfMissing
     Set-EnvValue "INITIAL_ADMIN_NAME" '"AGCP Administrator"' -OnlyIfMissing
     Set-EnvValue "INITIAL_ADMIN_EMAIL" "admin@localhost.test" -OnlyIfMissing
 
@@ -153,7 +154,7 @@ if (-not (Test-Path ".env")) {
 $composeFiles = @("-f", "docker-compose.yml", "-f", "docker-compose.dev.yml")
 Invoke-CheckedCommand -Command "docker" -Arguments (@("compose") + $composeFiles + @("config", "--quiet")) -FailureMessage "Docker Compose configuration validation failed"
 
-Write-Host "Building and starting AGCP Phase 3 containers..." -ForegroundColor Cyan
+Write-Host "Building and starting AGCP Phase 5 containers..." -ForegroundColor Cyan
 try {
     Invoke-CheckedCommand -Command "docker" -Arguments (@("compose") + $composeFiles + @("up", "-d", "--build", "--wait", "--wait-timeout", "900")) -FailureMessage "AGCP containers failed to build or become healthy"
 } catch {
@@ -163,12 +164,14 @@ try {
     throw
 }
 
-Write-Host "Running Phase 3 migrations and seeders..." -ForegroundColor Cyan
+Write-Host "Running Phase 5 migrations and seeders..." -ForegroundColor Cyan
 Invoke-CheckedCommand -Command "docker" -Arguments (@("compose") + $composeFiles + @("exec", "-T", "backend", "php", "artisan", "migrate", "--seed", "--force")) -FailureMessage "Database migration or seeding failed"
 
 Invoke-CheckedCommand -Command "docker" -Arguments (@("compose") + $composeFiles + @("ps")) -FailureMessage "Unable to read AGCP container status"
 
-Invoke-CheckedCommand -Command "docker" -Arguments (@("compose") + $composeFiles + @("exec", "-T", "backend", "php", "artisan", "route:list", "--path=api/v1/auth", "--except-vendor")) -FailureMessage "Phase 3 identity routes could not be verified"
+Invoke-CheckedCommand -Command "docker" -Arguments (@("compose") + $composeFiles + @("exec", "-T", "backend", "php", "artisan", "route:list", "--path=api/v1/auth", "--except-vendor")) -FailureMessage "Identity routes could not be verified"
+Invoke-CheckedCommand -Command "docker" -Arguments (@("compose") + $composeFiles + @("exec", "-T", "backend", "php", "artisan", "route:list", "--path=api/v1/admin/suppliers", "--except-vendor")) -FailureMessage "Supplier routes could not be verified"
+Invoke-CheckedCommand -Command "docker" -Arguments (@("compose") + $composeFiles + @("exec", "-T", "backend", "php", "artisan", "supplier:health-check")) -FailureMessage "Supplier health check failed"
 
 try {
     $response = Invoke-WebRequest -Uri "http://localhost:8080/api/v1/health" -UseBasicParsing -TimeoutSec 20
@@ -178,12 +181,13 @@ try {
 }
 
 Write-Host ""
-Write-Host "AGCP Phase 3 setup completed successfully." -ForegroundColor Green
+Write-Host "AGCP Phase 5 setup completed successfully." -ForegroundColor Green
 Write-Host "Website:        http://localhost:8080"
 Write-Host "Register:       http://localhost:8080/register"
 Write-Host "Login:          http://localhost:8080/login"
 Write-Host "Security:       http://localhost:8080/security"
 Write-Host "Admin:          http://localhost:8080/admin"
+Write-Host "Suppliers:      http://localhost:8080/admin/suppliers"
 Write-Host "Backend health: http://localhost:8080/api/v1/health"
 
 if ($null -ne $generatedAdminPassword) {

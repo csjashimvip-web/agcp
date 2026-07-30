@@ -34,7 +34,7 @@ if [ ! -f .env ]; then
   echo "Generated secure local .env file."
 else
   echo "Using and upgrading the existing .env file."
-  env_set APP_VERSION 4.0.0-phase4
+  env_set APP_VERSION 5.0.0-phase5
   env_has SANCTUM_STATEFUL_DOMAINS || env_set SANCTUM_STATEFUL_DOMAINS 'localhost:8080,localhost,127.0.0.1:8080,127.0.0.1'
   env_has FORTIFY_PREFIX || env_set FORTIFY_PREFIX 'api/v1/auth'
   env_has PASSKEYS_ALLOWED_ORIGINS || env_set PASSKEYS_ALLOWED_ORIGINS 'http://localhost:8080'
@@ -54,9 +54,11 @@ $COMPOSE config --quiet
 $COMPOSE up -d --build --wait --wait-timeout 900
 $COMPOSE exec -T backend php artisan migrate --seed --force
 $COMPOSE exec -T backend php artisan route:list --path=api/v1/auth --except-vendor >/dev/null
+$COMPOSE exec -T backend php artisan route:list --path=api/v1/admin/suppliers --except-vendor >/dev/null
+$COMPOSE exec -T backend php artisan supplier:health-check
 $COMPOSE ps
 
-echo "AGCP Phase 3 is available at http://localhost:8080"
+echo "AGCP Phase 5 is available at http://localhost:8080"
 if [ -n "$ADMIN_GENERATED" ]; then
   echo "Initial admin email: $(grep '^INITIAL_ADMIN_EMAIL=' .env | tail -1 | cut -d= -f2-)"
   echo "Initial admin password: $ADMIN_GENERATED"
