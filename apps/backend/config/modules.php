@@ -1,0 +1,10 @@
+<?php
+
+return ['providers' => [
+    Modules\Shared\Infrastructure\SharedServiceProvider::class,
+    Modules\Tenancy\Infrastructure\TenancyServiceProvider::class,
+    Modules\Audit\Infrastructure\AuditServiceProvider::class,
+    Modules\Identity\Infrastructure\IdentityServiceProvider::class,
+    Modules\Wallet\Infrastructure\WalletServiceProvider::class,
+    Modules\Commerce\Infrastructure\CommerceServiceProvider::class,
+]];
