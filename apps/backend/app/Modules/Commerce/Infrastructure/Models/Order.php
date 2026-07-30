@@ -16,7 +16,7 @@ final class Order extends Model
     protected function casts(): array
     {
         return [
-            'status'=>OrderStatus::class,'subtotal_minor'=>'integer','discount_minor'=>'integer','total_minor'=>'integer',
+            'status'=>OrderStatus::class,'subtotal_minor'=>'integer','discount_minor'=>'integer','surcharge_minor'=>'integer','total_minor'=>'integer',
             'placed_at'=>'immutable_datetime','canceled_at'=>'immutable_datetime','metadata'=>'array',
         ];
     }

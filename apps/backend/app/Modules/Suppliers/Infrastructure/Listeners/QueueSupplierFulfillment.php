@@ -15,6 +15,6 @@ final class QueueSupplierFulfillment
         $orderId = $event->payload['order_id'] ?? null;
         if (! is_string($orderId)) return;
         $order = Order::query()->with(['items.variant.item'])->find($orderId);
-        if ($order) $this->fulfillment->createForOrder($order);
+        if ($order && $order->fulfillment_status !== 'on_hold') $this->fulfillment->createForOrder($order);
     }
 }

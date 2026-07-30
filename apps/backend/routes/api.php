@@ -26,6 +26,10 @@ use Modules\Suppliers\Http\Controllers\Admin\AdminSupplierController;
 use Modules\Suppliers\Http\Controllers\Admin\AdminSupplierOrderController;
 use Modules\Suppliers\Http\Controllers\Admin\AdminSupplierRoutingProfileController;
 use Modules\Suppliers\Http\Controllers\Admin\AdminSupplierServiceController;
+use Modules\Rules\Http\Controllers\PricingQuoteController;
+use Modules\Rules\Http\Controllers\Admin\AdminRuleController;
+use Modules\Fraud\Http\Controllers\FraudAssessmentController;
+use Modules\Fraud\Http\Controllers\Admin\AdminFraudAssessmentController;
 
 Route::prefix('v1')->group(function (): void {
     Route::get('/health', HealthController::class)->name('api.v1.health');
@@ -44,6 +48,7 @@ Route::prefix('v1')->group(function (): void {
         'wallet_phase' => 'phase-3',
         'commerce_phase' => 'phase-4',
         'supplier_phase' => 'phase-5',
+        'rules_fraud_pricing_phase' => 'phase-6',
     ]]))->name('api.v1.platform');
 
     Route::prefix('auth')->middleware(['tenant', 'auth:sanctum', 'account.active', 'auth.session', 'throttle:api'])->group(function (): void {
@@ -85,6 +90,9 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/orders', [OrderController::class, 'index'])->middleware('permission:commerce.orders.view')->name('api.v1.orders.index');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->middleware('permission:commerce.orders.view')->name('api.v1.orders.show');
         Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->middleware(['permission:commerce.orders.view', 'throttle:sensitive'])->name('api.v1.orders.cancel');
+
+        Route::get('/pricing/quote', PricingQuoteController::class)->middleware('permission:commerce.catalog.view')->name('api.v1.pricing.quote');
+        Route::get('/risk/assessments', [FraudAssessmentController::class, 'index'])->middleware('permission:commerce.orders.view')->name('api.v1.risk.assessments.index');
     });
 
     Route::prefix('admin')->middleware([
@@ -143,5 +151,15 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/supplier-orders', [AdminSupplierOrderController::class, 'index'])->middleware('permission:supplier.orders.manage')->name('api.v1.admin.supplier-orders.index');
         Route::get('/supplier-orders/{supplierOrder}', [AdminSupplierOrderController::class, 'show'])->middleware('permission:supplier.orders.manage')->name('api.v1.admin.supplier-orders.show');
         Route::post('/supplier-orders/{supplierOrder}/retry', [AdminSupplierOrderController::class, 'retry'])->middleware(['permission:supplier.orders.manage', 'throttle:sensitive'])->name('api.v1.admin.supplier-orders.retry');
+
+
+        Route::get('/rules', [AdminRuleController::class, 'index'])->middleware('permission:rules.admin.access')->name('api.v1.admin.rules.index');
+        Route::post('/rules', [AdminRuleController::class, 'store'])->middleware(['permission:rules.manage', 'throttle:sensitive'])->name('api.v1.admin.rules.store');
+        Route::patch('/rules/{rule}', [AdminRuleController::class, 'update'])->middleware(['permission:rules.manage', 'throttle:sensitive'])->name('api.v1.admin.rules.update');
+        Route::post('/rules/{rule}/publish', [AdminRuleController::class, 'publish'])->middleware(['permission:rules.manage', 'throttle:sensitive'])->name('api.v1.admin.rules.publish');
+        Route::post('/rules/{rule}/pause', [AdminRuleController::class, 'pause'])->middleware(['permission:rules.manage', 'throttle:sensitive'])->name('api.v1.admin.rules.pause');
+        Route::get('/fraud/assessments', [AdminFraudAssessmentController::class, 'index'])->middleware('permission:fraud.admin.access')->name('api.v1.admin.fraud.assessments.index');
+        Route::post('/fraud/assessments/{assessment}/approve', [AdminFraudAssessmentController::class, 'approve'])->middleware(['permission:fraud.assessments.review', 'throttle:sensitive'])->name('api.v1.admin.fraud.assessments.approve');
+        Route::post('/fraud/assessments/{assessment}/reject', [AdminFraudAssessmentController::class, 'reject'])->middleware(['permission:fraud.assessments.review', 'throttle:sensitive'])->name('api.v1.admin.fraud.assessments.reject');
     });
 });

@@ -49,6 +49,11 @@ class IdentitySeeder extends Seeder
             ['slug' => 'supplier.services.manage', 'name' => 'Manage supplier service mappings', 'group' => 'Suppliers'],
             ['slug' => 'supplier.orders.manage', 'name' => 'Manage supplier orders and retries', 'group' => 'Suppliers'],
             ['slug' => 'supplier.health.manage', 'name' => 'Run supplier health checks', 'group' => 'Suppliers'],
+            ['slug' => 'rules.admin.access', 'name' => 'Access rule administration', 'group' => 'Rules'],
+            ['slug' => 'rules.manage', 'name' => 'Create, revise and publish rules', 'group' => 'Rules'],
+            ['slug' => 'fraud.admin.access', 'name' => 'Access fraud administration', 'group' => 'Fraud'],
+            ['slug' => 'fraud.assessments.review', 'name' => 'Approve or reject fraud assessments', 'group' => 'Fraud'],
+            ['slug' => 'pricing.dynamic.manage', 'name' => 'Manage dynamic pricing rules', 'group' => 'Pricing'],
         ];
 
         foreach ($definitions as $definition) {
@@ -74,6 +79,7 @@ class IdentitySeeder extends Seeder
             'commerce.catalog.view', 'commerce.cart.manage', 'commerce.checkout', 'commerce.orders.view',
             'commerce.admin.access', 'commerce.catalog.manage', 'commerce.pricing.manage', 'commerce.inventory.manage', 'commerce.orders.manage',
             'supplier.admin.access', 'supplier.accounts.manage', 'supplier.services.manage', 'supplier.orders.manage', 'supplier.health.manage',
+            'rules.admin.access', 'rules.manage', 'fraud.admin.access', 'fraud.assessments.review', 'pricing.dynamic.manage',
         ])->pluck('id')->all());
 
         $customer = Role::query()->firstOrCreate(

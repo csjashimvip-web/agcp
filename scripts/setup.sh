@@ -34,7 +34,7 @@ if [ ! -f .env ]; then
   echo "Generated secure local .env file."
 else
   echo "Using and upgrading the existing .env file."
-  env_set APP_VERSION 5.0.0-phase5
+  env_set APP_VERSION 6.0.0-phase6
   env_has SANCTUM_STATEFUL_DOMAINS || env_set SANCTUM_STATEFUL_DOMAINS 'localhost:8080,localhost,127.0.0.1:8080,127.0.0.1'
   env_has FORTIFY_PREFIX || env_set FORTIFY_PREFIX 'api/v1/auth'
   env_has PASSKEYS_ALLOWED_ORIGINS || env_set PASSKEYS_ALLOWED_ORIGINS 'http://localhost:8080'

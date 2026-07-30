@@ -126,7 +126,7 @@ if (-not (Test-Path ".env")) {
     Write-Host "Generated secure local .env file." -ForegroundColor Green
 } else {
     Write-Host "Using and upgrading the existing .env file." -ForegroundColor Cyan
-    Set-EnvValue "APP_VERSION" "5.0.0-phase5"
+    Set-EnvValue "APP_VERSION" "6.0.0-phase6"
     Set-EnvValue "SANCTUM_STATEFUL_DOMAINS" "localhost:8080,localhost,127.0.0.1:8080,127.0.0.1" -OnlyIfMissing
     Set-EnvValue "FORTIFY_PREFIX" "api/v1/auth" -OnlyIfMissing
     Set-EnvValue "PASSKEYS_ALLOWED_ORIGINS" "http://localhost:8080" -OnlyIfMissing

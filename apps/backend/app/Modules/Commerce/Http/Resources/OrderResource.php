@@ -8,7 +8,7 @@ final class OrderResource extends JsonResource
     {
         return [
             'id'=>$this->id,'number'=>$this->number,'status'=>$this->status->value,'payment_status'=>$this->payment_status,'fulfillment_status'=>$this->fulfillment_status,
-            'currency'=>$this->currency,'subtotal_minor'=>(int)$this->subtotal_minor,'discount_minor'=>(int)$this->discount_minor,'total_minor'=>(int)$this->total_minor,
+            'currency'=>$this->currency,'subtotal_minor'=>(int)$this->subtotal_minor,'discount_minor'=>(int)$this->discount_minor,'surcharge_minor'=>(int)($this->surcharge_minor ?? 0),'total_minor'=>(int)$this->total_minor,
             'total'=>number_format($this->total_minor/100,2,'.',''),'placed_at'=>$this->placed_at?->toIso8601String(),'canceled_at'=>$this->canceled_at?->toIso8601String(),
             'user'=>$this->whenLoaded('user', fn()=>['id'=>$this->user->id,'name'=>$this->user->name,'email'=>$this->user->email]),
             'items'=>$this->whenLoaded('items', fn()=> $this->items->map(fn($item)=>[

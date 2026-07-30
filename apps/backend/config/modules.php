@@ -8,4 +8,6 @@ return ['providers' => [
     Modules\Wallet\Infrastructure\WalletServiceProvider::class,
     Modules\Commerce\Infrastructure\CommerceServiceProvider::class,
     Modules\Suppliers\Infrastructure\SupplierServiceProvider::class,
+    Modules\Rules\Infrastructure\RulesServiceProvider::class,
+    Modules\Fraud\Infrastructure\FraudServiceProvider::class,
 ]];

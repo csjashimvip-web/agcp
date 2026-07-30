@@ -23,7 +23,7 @@ export function PortalHeader({ name, admin }: { name?: string; admin?: boolean }
         <Link href="/wallet">Wallet</Link>
         <Link href="/deposits">Deposits</Link>
         <Link href="/security">Security</Link>
-        {admin ? <><Link href="/admin">Admin</Link><Link href="/admin/wallets">Wallet admin</Link><Link href="/admin/commerce">Commerce admin</Link><Link href="/admin/suppliers">Suppliers</Link></> : null}
+        {admin ? <><Link href="/admin">Admin</Link><Link href="/admin/wallets">Wallet admin</Link><Link href="/admin/commerce">Commerce admin</Link><Link href="/admin/suppliers">Suppliers</Link><Link href="/admin/rules">Rules & risk</Link></> : null}
         <button onClick={logout}>Sign out{name ? ` · ${name}` : ""}</button>
       </nav>
     </header>

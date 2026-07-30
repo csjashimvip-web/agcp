@@ -37,3 +37,5 @@ The artifact environment does not include the project's Composer dependencies or
 - Next.js full typecheck and production build.
 
 Run `scripts/upgrade-phase5.ps1`, then `scripts/verify-phase5.ps1`.
+
+- Phase 6 rules, fraud and dynamic pricing module

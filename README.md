@@ -1,4 +1,4 @@
-# Araabi Global Commerce Platform — Phase 5
+# Araabi Global Commerce Platform — Phase 6
 
 AGCP Phase 5 adds the Smart Supplier Engine on top of the verified Identity, Enterprise Wallet and Commerce Core foundations.
 
@@ -56,3 +56,8 @@ Verify:
 To test failover, set `sandbox_fail_submissions` to `true` in one sandbox supplier's metadata through code or an API client. To test automatic refund, configure every eligible sandbox supplier to fail.
 
 See `docs/SMART_SUPPLIER_ENGINE.md` and `docs/PHASE_5_REPORT.md`.
+
+
+## Phase 6
+
+Rules, fraud scoring and dynamic pricing are available at `http://localhost:8080/admin/rules`. Use `scripts/upgrade-phase6.ps1` when upgrading from Phase 5 and `scripts/verify-phase6.ps1` for verification.

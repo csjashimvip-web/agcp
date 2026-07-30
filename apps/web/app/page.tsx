@@ -1,12 +1,12 @@
 import Link from "next/link";
 
 const features = [
-  ["01", "Auditable routing", "Every candidate receives a stored score with cost, success, health, latency and priority evidence."],
-  ["02", "Automatic failover", "Failed providers are penalized and excluded while the next eligible mapping is selected automatically."],
-  ["03", "Provider adapters", "Supplier-specific API code stays behind a stable contract instead of leaking into checkout or order logic."],
-  ["04", "Health scoring", "Scheduled probes and live request outcomes update latency, success rate and temporary circuit breaking."],
-  ["05", "Background fulfillment", "Outbox events, supplier queues and polling workers keep slow external APIs away from customer requests."],
-  ["06", "Automatic refund", "Terminal fulfillment failure posts a balanced item-level wallet refund with an immutable ledger reference."],
+  ["01", "Versioned rules", "Publish pricing and fraud decisions as immutable versions with checksums and a complete execution trail."],
+  ["02", "Dynamic pricing", "Apply server-side quantity, segment and context adjustments while preserving the original catalog price."],
+  ["03", "Risk scoring", "Combine deterministic signals with tenant rules to produce allow, step-up, review or block decisions."],
+  ["04", "Manual review", "Hold risky orders away from supplier fulfillment until an authorized reviewer approves or rejects them."],
+  ["05", "Explainable decisions", "Every matched condition, action, signal and pricing adjustment remains visible for audit and support."],
+  ["06", "Safe automation", "Rules change business behavior without embedding tenant policy inside checkout, wallet or supplier code."],
 ];
 
 export default function Home() {
@@ -15,12 +15,12 @@ export default function Home() {
       <section className="hero shell">
         <nav className="landingNav"><Link className="brand" href="/"><span>A</span>AGCP</Link><div><Link href="/catalog">Catalog</Link><Link href="/login">Sign in</Link><Link className="navCta" href="/register">Create account</Link></div></nav>
         <div className="heroGrid">
-          <div><p className="eyebrow">Phase 5 · Smart Supplier Engine</p><h1>External fulfillment without surrendering control.</h1><p className="lead">A deterministic supplier router with provider isolation, health scoring, queue processing, failover and ledger-backed refunds.</p><div className="actions"><Link className="primary" href="/catalog">Test automated service</Link><Link className="secondary" href="/admin/suppliers">Supplier dashboard</Link></div></div>
-          <aside className="statusCard"><header><i />Supplier engine ready</header>{[["Routing","Balanced scoring"],["Failure","Automatic failover"],["Health","Circuit protection"],["Refund","Item-level journal"]].map(([a,b])=><div className="metric" key={a}><span>{a}</span><strong>{b}</strong></div>)}</aside>
+          <div><p className="eyebrow">Phase 6 · Rules, Fraud & Dynamic Pricing</p><h1>Decisions that are adaptive, explainable and controlled.</h1><p className="lead">A deterministic policy layer for dynamic prices, fraud scoring, review holds and auditable automation across commerce and supplier fulfillment.</p><div className="actions"><Link className="primary" href="/catalog">Explore catalog</Link><Link className="secondary" href="/admin/rules">Rules & risk dashboard</Link></div></div>
+          <aside className="statusCard"><header><i />Decision engine ready</header>{[["Rules","Versioned publishing"],["Pricing","Server-side adjustment"],["Fraud","Explainable score"],["Review","Hold and release"]].map(([a,b])=><div className="metric" key={a}><span>{a}</span><strong>{b}</strong></div>)}</aside>
         </div>
       </section>
-      <section className="shell section"><p className="eyebrow">Supplier automation</p><h2>Fast customer journeys backed by explainable operations.</h2><div className="featureGrid">{features.map(([n,t,d])=><article key={n}><span>{n}</span><h3>{t}</h3><p>{d}</p></article>)}</div></section>
-      <footer className="shell"><b>AGCP</b><span>Smart Supplier Engine · Phase 5</span></footer>
+      <section className="shell section"><p className="eyebrow">Policy automation</p><h2>Change business decisions without rewriting the transaction core.</h2><div className="featureGrid">{features.map(([n,t,d])=><article key={n}><span>{n}</span><h3>{t}</h3><p>{d}</p></article>)}</div></section>
+      <footer className="shell"><b>AGCP</b><span>Rules, Fraud & Dynamic Pricing · Phase 6</span></footer>
     </main>
   );
 }
