@@ -102,3 +102,7 @@ Terminal supplier failure calls the Wallet application services to post an item-
 ## Phase 7: SaaS control plane and approved plugins
 
 The tenant resolver remains the mandatory request boundary. Phase 7 adds subscription-backed entitlements, quota counters, tenant branding, domain verification metadata and a manifest-only plugin catalog. Executable plugin uploads are prohibited; manifests can activate only provider keys already reviewed and shipped with the application. This preserves modular-monolith safety while allowing later provider marketplace expansion.
+
+## Phase 8: Explainable AI and advanced analytics
+
+Phase 8 adds a read-oriented tenant analytics module. It derives KPI snapshots, deterministic forecasts, RFM-style customer segments, supplier rankings and evidence-backed insights from existing transactional data. Analytics never mutates wallet balances, fraud decisions or production supplier routes. The default `AiInsightProvider` is local and deterministic; reviewed external providers may be added later behind the provider contract and tenant data-governance controls.

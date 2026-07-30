@@ -35,6 +35,7 @@ use Modules\SaaS\Http\Controllers\Admin\AdminSaasController;
 use Modules\SaaS\Http\Controllers\Admin\AdminTenantProfileController;
 use Modules\SaaS\Http\Controllers\Admin\AdminTenantDomainController;
 use Modules\Plugins\Http\Controllers\Admin\AdminPluginController;
+use Modules\Analytics\Http\Controllers\Admin\AdminAnalyticsController;
 
 Route::prefix('v1')->group(function (): void {
     Route::get('/health', HealthController::class)->name('api.v1.health');
@@ -56,6 +57,7 @@ Route::prefix('v1')->group(function (): void {
         'supplier_phase' => 'phase-5',
         'rules_fraud_pricing_phase' => 'phase-6',
         'saas_plugins_phase' => 'phase-7',
+        'ai_analytics_phase' => 'phase-8',
     ]]))->name('api.v1.platform');
 
     Route::prefix('auth')->middleware(['tenant', 'auth:sanctum', 'account.active', 'auth.session', 'throttle:api'])->group(function (): void {
@@ -185,5 +187,9 @@ Route::prefix('v1')->group(function (): void {
         Route::patch('/plugin-installations/{installation}', [AdminPluginController::class, 'configure'])->middleware(['permission:plugins.manage', 'feature:plugins.marketplace', 'throttle:sensitive'])->name('api.v1.admin.plugins.configure');
         Route::post('/plugin-installations/{installation}/enable', [AdminPluginController::class, 'enable'])->middleware(['permission:plugins.manage', 'feature:plugins.marketplace', 'throttle:sensitive'])->name('api.v1.admin.plugins.enable');
         Route::post('/plugin-installations/{installation}/disable', [AdminPluginController::class, 'disable'])->middleware(['permission:plugins.manage', 'throttle:sensitive'])->name('api.v1.admin.plugins.disable');
+
+        Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->middleware('permission:analytics.admin.access')->name('api.v1.admin.analytics.index');
+        Route::post('/analytics/refresh', [AdminAnalyticsController::class, 'refresh'])->middleware(['permission:analytics.refresh', 'throttle:sensitive'])->name('api.v1.admin.analytics.refresh');
+        Route::patch('/analytics/insights/{insight}', [AdminAnalyticsController::class, 'updateInsight'])->middleware(['permission:analytics.admin.access', 'throttle:sensitive'])->name('api.v1.admin.analytics.insights.update');
     });
 });

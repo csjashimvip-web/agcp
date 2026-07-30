@@ -18,13 +18,13 @@ final class SaasPluginSeeder extends Seeder
     {
         $plans = [
             ['name' => 'Starter', 'slug' => 'starter', 'price_monthly_minor' => 2900, 'price_yearly_minor' => 29000,
-                'features' => ['wallet' => true, 'commerce' => true, 'suppliers' => false, 'rules' => false, 'fraud' => false, 'plugins' => ['marketplace' => false], 'custom_domains' => false],
+                'features' => ['wallet' => true, 'commerce' => true, 'suppliers' => false, 'rules' => false, 'fraud' => false, 'analytics' => ['dashboard' => true, 'forecasting' => false, 'ai_insights' => false], 'plugins' => ['marketplace' => false], 'custom_domains' => false],
                 'limits' => ['users' => 5, 'orders_monthly' => 500, 'products' => 100, 'api_requests_monthly' => 10000]],
             ['name' => 'Growth', 'slug' => 'growth', 'price_monthly_minor' => 9900, 'price_yearly_minor' => 99000,
-                'features' => ['wallet' => true, 'commerce' => true, 'suppliers' => true, 'rules' => true, 'fraud' => true, 'plugins' => ['marketplace' => true], 'custom_domains' => true],
+                'features' => ['wallet' => true, 'commerce' => true, 'suppliers' => true, 'rules' => true, 'fraud' => true, 'analytics' => ['dashboard' => true, 'forecasting' => true, 'ai_insights' => true], 'plugins' => ['marketplace' => true], 'custom_domains' => true],
                 'limits' => ['users' => 50, 'orders_monthly' => 10000, 'products' => 5000, 'api_requests_monthly' => 500000]],
             ['name' => 'Enterprise', 'slug' => 'enterprise', 'price_monthly_minor' => 0, 'price_yearly_minor' => 0,
-                'features' => ['wallet' => true, 'commerce' => true, 'suppliers' => true, 'rules' => true, 'fraud' => true, 'plugins' => ['marketplace' => true], 'custom_domains' => true, 'white_label' => true, 'advanced_audit' => true],
+                'features' => ['wallet' => true, 'commerce' => true, 'suppliers' => true, 'rules' => true, 'fraud' => true, 'analytics' => ['dashboard' => true, 'forecasting' => true, 'ai_insights' => true, 'supplier_recommendations' => true], 'plugins' => ['marketplace' => true], 'custom_domains' => true, 'white_label' => true, 'advanced_audit' => true],
                 'limits' => ['users' => 100000, 'orders_monthly' => 10000000, 'products' => 1000000, 'api_requests_monthly' => 100000000]],
         ];
         foreach ($plans as $index => $definition) {

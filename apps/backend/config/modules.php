@@ -12,4 +12,5 @@ return ['providers' => [
     Modules\Fraud\Infrastructure\FraudServiceProvider::class,
     Modules\SaaS\Infrastructure\SaaSServiceProvider::class,
     Modules\Plugins\Infrastructure\PluginsServiceProvider::class,
+    Modules\Analytics\Infrastructure\AnalyticsServiceProvider::class,
 ]];

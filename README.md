@@ -1,57 +1,49 @@
-# Araabi Global Commerce Platform — Phase 7
+# Araabi Global Commerce Platform — Phase 8
 
-AGCP is a modular, tenant-aware digital and physical commerce platform. Phase 7 adds the SaaS control plane and approved plugin marketplace on top of Identity, Wallet, Commerce, Supplier, Rules, Fraud and Dynamic Pricing foundations.
+AGCP is a modular, tenant-aware digital and physical commerce platform. Phase 8 adds explainable AI-assisted analytics on top of Identity, Wallet, Commerce, Supplier, Rules, Fraud, Dynamic Pricing, SaaS and Plugin foundations.
 
-## Phase 7 capabilities
+## Phase 8 capabilities
 
-- Multi-tenant plan catalog and subscription lifecycle
-- Nested feature entitlements and numeric quotas
-- Locked monthly usage counters
-- Tenant provisioning with owner membership and tenant-admin role
-- White-label branding profiles
-- Custom-domain verification lifecycle
-- Public tenant configuration API for headless clients
-- Approved manifest-based plugin marketplace
-- Encrypted tenant plugin configuration
-- Install, configure, enable and disable lifecycle events
-- Platform-only tenant and subscription controls
-- Tenant-scoped branding, domains and plugin administration
+- Tenant-isolated KPI snapshots
+- Sales forecasting with basis window, confidence and daily points
+- RFM-style customer segmentation
+- Explainable supplier recommendations
+- AI-assisted operational insights with stored evidence
+- Model-run monitoring and failure records
+- Synchronous, queued and scheduled analytics refresh
+- Admin analytics dashboard
+- Analytics permissions and SaaS entitlements
 
-## Security model
+The default provider is local and deterministic. No tenant data is sent to an external AI service.
 
-Phase 7 does not accept arbitrary PHP, JavaScript, Composer, NPM or ZIP plugin uploads. Marketplace records point only to approved provider keys already reviewed and shipped with AGCP. Secret configuration values use Laravel encrypted casts and are never returned by the API.
+## Upgrade Phase 7 → Phase 8
 
-## Upgrade Phase 6 → Phase 7
-
-Extract `agcp-phase7-upgrade-patch.zip` into `C:\Projects\agcp`, choose **Replace All**, preserve the existing `.env`, then run:
+Extract `agcp-phase8-upgrade-patch.zip` into `C:\Projects\agcp`, choose **Replace All**, preserve the existing `.env`, then run:
 
 ```powershell
 cd C:\Projects\agcp
 Set-ExecutionPolicy -Scope Process Bypass
-.\scripts\upgrade-phase7.ps1
+.\scripts\upgrade-phase8.ps1
 ```
 
 Verify:
 
 ```powershell
-.\scripts\verify-phase7.ps1
+.\scripts\verify-phase8.ps1
 ```
 
 ## URLs
 
+- AI and analytics administration: `http://localhost:8080/admin/analytics`
 - SaaS and plugin administration: `http://localhost:8080/admin/saas`
-- Tenant configuration API: `http://localhost:8080/api/v1/tenant/configuration`
-- Identity administration: `http://localhost:8080/admin`
 - Commerce administration: `http://localhost:8080/admin/commerce`
 - Supplier administration: `http://localhost:8080/admin/suppliers`
 - Rules and fraud: `http://localhost:8080/admin/rules`
 
-## Seeded plans
+## Manual refresh
 
-- Starter
-- Growth
-- Enterprise
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend php artisan analytics:refresh --tenant=araabi-global
+```
 
-The existing `araabi-global` tenant receives the Enterprise plan so all previously delivered Phase 1–6 capabilities remain available after upgrade.
-
-See `docs/SAAS_AND_PLUGIN_MARKETPLACE.md` and `docs/PHASE_7_REPORT.md`.
+See `docs/AI_ANALYTICS_AUTOMATION.md` and `docs/PHASE_8_REPORT.md`.

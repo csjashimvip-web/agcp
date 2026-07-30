@@ -1,39 +1,31 @@
-# Phase 7 Build Manifest
+# Phase 8 Build Manifest
 
-- Build date: 2026-07-30
-- Platform: Araabi Global Commerce Platform (AGCP)
-- Phase: 7 — Multi-Tenant SaaS and Plugin Marketplace
-- Upgrade base: Phase 6 Rules, Fraud and Dynamic Pricing
-- Runtime baseline: Laravel 13 / PHP 8.4 / Next.js 16 / React 19.2 / Node.js 22 / MySQL 8.4 / Redis / Nginx
+## Runtime
 
-## Static validation completed
+- Laravel 13 / PHP 8.4 backend
+- Next.js 16 / React 19 frontend
+- MySQL 8.4
+- Redis queues and cache
+- Nginx gateway
 
-- All backend PHP files passed `php -l`.
-- Local application class references were resolved against declared classes.
-- JSON and YAML documents parsed successfully.
-- Shell scripts passed `bash -n` where applicable.
-- TypeScript and TSX source files passed compiler-based syntactic parsing.
-- Git diff whitespace validation passed.
-- Full and patch ZIP integrity checks are performed during artifact packaging.
+## Phase 8 modules
 
-## Phase 7 automated tests included
+- `Modules/Analytics/Application/Services/AnalyticsPipelineService`
+- KPI snapshot, segmentation and forecasting services
+- Explainable supplier recommendation service
+- Local deterministic insight provider
+- Reports-queue refresh job
+- Daily `analytics:refresh` command
+- Admin analytics API and page
 
-- subscription entitlement and limit resolution;
-- locked monthly quota enforcement;
-- encrypted plugin secrets and lifecycle events;
-- isolated tenant provisioning with owner membership and tenant roles;
-- Phase 6 Rules/Fraud regression verification;
-- Phase 5 Supplier Engine regression verification;
-- frontend TypeScript verification in the Docker runtime.
+## Phase 8 automated tests included
 
-## Runtime validation required on the receiving machine
+- `AnalyticsAiTest`
+- Phase 7 SaaS/plugin regression
+- Phase 6 rules/fraud regression
+- Phase 5 supplier regression
+- Frontend TypeScript validation
 
-The artifact environment does not include Docker or the project's Composer dependency tree. Its internal npm mirror also lacks some project packages. Therefore these checks are intentionally delegated to the user's verified Docker Desktop environment:
+## Migration
 
-- full Docker image build;
-- Composer dependency boot;
-- MySQL migration execution;
-- Laravel feature-test execution;
-- Next.js full typecheck and production build.
-
-Run `scripts/upgrade-phase7.ps1`, then `scripts/verify-phase7.ps1`.
+- `2026_07_30_700001_create_ai_analytics_tables.php`
