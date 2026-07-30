@@ -87,6 +87,9 @@ class IdentitySeeder extends Seeder
             ['slug' => 'reporting.tax.manage', 'name' => 'Manage tenant tax profiles and rates', 'group' => 'Reporting'],
             ['slug' => 'reporting.exports.manage', 'name' => 'Generate and download tenant data exports', 'group' => 'Reporting'],
             ['slug' => 'reporting.schedules.manage', 'name' => 'Manage scheduled business reports', 'group' => 'Reporting'],
+            ['slug' => 'reliability.admin.access', 'name' => 'Access platform reliability administration', 'group' => 'Reliability'],
+            ['slug' => 'reliability.backups.manage', 'name' => 'Create and verify encrypted platform backups', 'group' => 'Reliability'],
+            ['slug' => 'reliability.release.check', 'name' => 'Run platform production-readiness checks', 'group' => 'Reliability'],
         ];
 
         foreach ($definitions as $definition) {

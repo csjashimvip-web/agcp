@@ -27,7 +27,7 @@ export function PortalHeader({ name, admin }: { name?: string; admin?: boolean }
         <Link href="/notifications">Notifications</Link>
         <Link href="/support">Support</Link>
         <Link href="/security">Security</Link>
-        {admin ? <><Link href="/admin">Admin</Link><Link href="/admin/wallets">Wallet admin</Link><Link href="/admin/commerce">Commerce admin</Link><Link href="/admin/suppliers">Suppliers</Link><Link href="/admin/rules">Rules & risk</Link><Link href="/admin/saas">SaaS & plugins</Link><Link href="/admin/analytics">AI & analytics</Link><Link href="/admin/payments">Payments</Link><Link href="/admin/notifications">Notifications</Link><Link href="/admin/operations">Operations</Link><Link href="/admin/support">Support desk</Link><Link href="/admin/webhooks">Webhooks</Link><Link href="/admin/reports">Reports</Link></> : null}
+        {admin ? <><Link href="/admin">Admin</Link><Link href="/admin/wallets">Wallet admin</Link><Link href="/admin/commerce">Commerce admin</Link><Link href="/admin/suppliers">Suppliers</Link><Link href="/admin/rules">Rules & risk</Link><Link href="/admin/saas">SaaS & plugins</Link><Link href="/admin/analytics">AI & analytics</Link><Link href="/admin/payments">Payments</Link><Link href="/admin/notifications">Notifications</Link><Link href="/admin/operations">Operations</Link><Link href="/admin/support">Support desk</Link><Link href="/admin/webhooks">Webhooks</Link><Link href="/admin/reports">Reports</Link><Link href="/admin/reliability">Reliability</Link></> : null}
         <button onClick={logout}>Sign out{name ? ` · ${name}` : ""}</button>
       </nav>
     </header>

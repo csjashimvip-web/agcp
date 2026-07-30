@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\LivenessController;
+use App\Http\Controllers\Api\V1\ReadinessController;
 use Illuminate\Support\Facades\Route;
 use Modules\Commerce\Http\Controllers\Admin\AdminCatalogController;
 use Modules\Commerce\Http\Controllers\Admin\AdminInventoryController;
@@ -48,9 +50,12 @@ use Modules\Observability\Http\Controllers\Admin\AdminOperationsController;
 use Modules\Reporting\Http\Controllers\InvoiceController;
 use Modules\Reporting\Http\Controllers\CustomerTaxProfileController;
 use Modules\Reporting\Http\Controllers\Admin\AdminReportingController;
+use Modules\Reliability\Http\Controllers\Admin\AdminReliabilityController;
 
 Route::prefix('v1')->group(function (): void {
     Route::get('/health', HealthController::class)->name('api.v1.health');
+    Route::get('/health/live', LivenessController::class)->name('api.v1.health.live');
+    Route::get('/health/ready', ReadinessController::class)->name('api.v1.health.ready');
     Route::post('/payments/webhooks/{provider}/{accountCode?}', PaymentWebhookController::class)->middleware(['tenant', 'throttle:payment-webhook'])->name('api.v1.payments.webhooks');
 
     Route::middleware(['tenant', 'throttle:api'])->group(function (): void {
@@ -74,6 +79,7 @@ Route::prefix('v1')->group(function (): void {
         'payments_reconciliation_phase' => 'phase-9',
         'engagement_operations_phase' => 'phase-10',
         'reporting_invoicing_phase' => 'phase-11',
+        'reliability_production_readiness_phase' => 'phase-12',
     ]]))->name('api.v1.platform');
 
     Route::prefix('auth')->middleware(['tenant', 'auth:sanctum', 'account.active', 'auth.session', 'throttle:api'])->group(function (): void {
@@ -274,5 +280,10 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/reports/schedules', [AdminReportingController::class, 'storeSchedule'])->middleware(['permission:reporting.schedules.manage', 'throttle:sensitive'])->name('api.v1.admin.reports.schedules.store');
         Route::patch('/reports/schedules/{schedule}', [AdminReportingController::class, 'updateSchedule'])->middleware(['permission:reporting.schedules.manage', 'throttle:sensitive'])->name('api.v1.admin.reports.schedules.update');
         Route::post('/reports/schedules/{schedule}/run', [AdminReportingController::class, 'runSchedule'])->middleware(['permission:reporting.schedules.manage', 'throttle:sensitive'])->name('api.v1.admin.reports.schedules.run');
+
+        Route::get('/reliability', [AdminReliabilityController::class, 'index'])->middleware('permission:reliability.admin.access')->name('api.v1.admin.reliability.index');
+        Route::post('/reliability/backups', [AdminReliabilityController::class, 'backup'])->middleware(['permission:reliability.backups.manage', 'throttle:sensitive'])->name('api.v1.admin.reliability.backups.store');
+        Route::post('/reliability/backups/{backup}/verify', [AdminReliabilityController::class, 'verify'])->middleware(['permission:reliability.backups.manage', 'throttle:sensitive'])->name('api.v1.admin.reliability.backups.verify');
+        Route::post('/reliability/checks', [AdminReliabilityController::class, 'check'])->middleware(['permission:reliability.release.check', 'throttle:sensitive'])->name('api.v1.admin.reliability.checks.store');
     });
 });

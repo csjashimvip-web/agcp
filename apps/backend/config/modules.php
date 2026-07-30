@@ -19,4 +19,5 @@ return ['providers' => [
     Modules\Support\Infrastructure\SupportServiceProvider::class,
     Modules\Observability\Infrastructure\ObservabilityServiceProvider::class,
     Modules\Reporting\Infrastructure\ReportingServiceProvider::class,
+    Modules\Reliability\Infrastructure\ReliabilityServiceProvider::class,
 ]];

@@ -38,7 +38,7 @@ services:
   frontend:
     build:
       target: development
-    command: ["npm", "run", "dev", "--", "--hostname", "0.0.0.0", "--webpack"]
+    command: ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
     environment:
       NODE_ENV: development
       WATCHPACK_POLLING: "true"

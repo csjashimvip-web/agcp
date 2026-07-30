@@ -1,5 +1,5 @@
 FROM php:8.4-fpm-bookworm AS base
-RUN apt-get update && apt-get install -y --no-install-recommends bash curl git unzip libicu-dev libonig-dev libxml2-dev libzip-dev \
+RUN apt-get update && apt-get install -y --no-install-recommends bash curl git unzip default-mysql-client libicu-dev libonig-dev libxml2-dev libzip-dev \
     && docker-php-ext-install -j"$(nproc)" bcmath intl mbstring opcache pcntl pdo_mysql xml zip \
     && pecl install redis \
     && docker-php-ext-enable redis \

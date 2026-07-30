@@ -13,3 +13,9 @@ Schedule::command('ops:snapshot')->everyFiveMinutes()->withoutOverlapping()->onO
 Schedule::command('invoices:generate-missing --limit=100')->hourly()->withoutOverlapping()->onOneServer();
 Schedule::command('reports:run-due --limit='.env('REPORT_SCHEDULE_BATCH_SIZE',50))->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
 Schedule::command('reports:purge-expired --limit=500')->dailyAt('04:10')->withoutOverlapping()->onOneServer();
+
+Schedule::command('reliability:heartbeat scheduler')->everyMinute()->withoutOverlapping()->onOneServer();
+Schedule::command('reliability:backup')->dailyAt((string) config('reliability.backup.daily_time', '01:30'))->withoutOverlapping()->onOneServer()->when(fn (): bool => (bool) config('reliability.backup.enabled'));
+Schedule::command('reliability:verify-backup --latest')->dailyAt('02:30')->withoutOverlapping()->onOneServer()->when(fn (): bool => (bool) config('reliability.backup.enabled'));
+Schedule::command('reliability:check --persist')->hourly()->withoutOverlapping()->onOneServer();
+Schedule::command('reliability:purge-backups --limit=100')->dailyAt('05:10')->withoutOverlapping()->onOneServer();
