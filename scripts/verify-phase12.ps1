@@ -20,6 +20,9 @@ $compose=@("-f","docker-compose.yml","-f","docker-compose.dev.yml")
 & docker compose @compose exec -T backend php artisan test --filter=CommerceCoreTest; if($LASTEXITCODE-ne 0){throw "Commerce regression tests failed."}
 & docker compose @compose exec -T backend php artisan test --filter=WalletDepositTest; if($LASTEXITCODE-ne 0){throw "Wallet regression tests failed."}
 & docker compose @compose exec -T frontend npm run typecheck; if($LASTEXITCODE-ne 0){throw "Frontend typecheck failed."}
+& docker compose @compose exec -T backend php artisan reliability:heartbeat scheduler
+if($LASTEXITCODE-ne 0){throw "Final scheduler heartbeat refresh failed."}
+
 $live=Invoke-RestMethod -Uri "http://localhost:8080/api/v1/health/live" -TimeoutSec 20
 $ready=Invoke-RestMethod -Uri "http://localhost:8080/api/v1/health/ready" -TimeoutSec 20
 Write-Host "Phase 12 verification completed successfully." -ForegroundColor Green
