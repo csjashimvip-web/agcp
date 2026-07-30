@@ -21,6 +21,7 @@ class DepositRequest extends Model
     }
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
     public function wallet(): BelongsTo { return $this->belongsTo(Wallet::class); }
+    public function paymentIntent(): BelongsTo { return $this->belongsTo(\Modules\Payments\Infrastructure\Models\PaymentIntent::class); }
     public function reviewer(): BelongsTo { return $this->belongsTo(User::class, 'reviewed_by'); }
     public function ledgerTransaction(): BelongsTo { return $this->belongsTo(LedgerTransaction::class); }
 }

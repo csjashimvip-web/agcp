@@ -59,3 +59,24 @@ Before public deployment:
 ## Supported versions
 
 Security fixes target the active main branch. Runtime and dependency versions are pinned in the phase package and must be reviewed regularly before production releases.
+
+## Phase 9 payment controls
+
+- Customer wallet credit is prohibited until a signed provider webhook is verified server-side.
+- Webhook timestamps are checked against a strict replay window.
+- Signatures use constant-time comparison.
+- External event IDs are unique per provider account and duplicate delivery is idempotent.
+- Provider credentials, webhook secrets, event payloads and sensitive headers are encrypted at rest.
+- Authorization, cookies and API-key headers are redacted before webhook headers are stored.
+- Payment amount, currency, provider account and provider payment ID are matched against the server-created intent.
+- Payment create and refund endpoints require idempotency keys.
+- Automated refunds require provider confirmation and enough available wallet balance for the ledger reversal.
+- Reconciliation records missing deposits, missing journals, stale intents, refund overages and orphaned records without silently changing financial data.
+- The bundled sandbox provider must never be treated as a production gateway.
+
+## Phase 11 financial documents and exports
+
+- Invoice numbering is allocated under a database lock and each order can have only one invoice.
+- Invoice seller, buyer, item and tax data is snapshotted and protected by a SHA-256 integrity hash.
+- Export files are private, tenant scoped, authenticated, checksummed and retention limited.
+- Tax configuration is a technical foundation only; production tax rules and invoice wording require qualified jurisdiction-specific review.

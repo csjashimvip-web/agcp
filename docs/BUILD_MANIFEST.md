@@ -1,4 +1,4 @@
-# Phase 8 Build Manifest
+# Phase 11 Build Manifest
 
 ## Runtime
 
@@ -8,24 +8,21 @@
 - Redis queues and cache
 - Nginx gateway
 
-## Phase 8 modules
+## Phase 11 modules
 
-- `Modules/Analytics/Application/Services/AnalyticsPipelineService`
-- KPI snapshot, segmentation and forecasting services
-- Explainable supplier recommendation service
-- Local deterministic insight provider
-- Reports-queue refresh job
-- Daily `analytics:refresh` command
-- Admin analytics API and page
+- Tenant and customer tax profiles
+- Effective tenant tax rates
+- Immutable invoice snapshots and content hashes
+- Private checksummed CSV exports
+- Scheduled report execution and run history
+- Customer invoices and reporting administration pages
 
-## Phase 8 automated tests included
+## Phase 11 automated tests included
 
-- `AnalyticsAiTest`
-- Phase 7 SaaS/plugin regression
-- Phase 6 rules/fraud regression
-- Phase 5 supplier regression
+- `ReportingInvoicingTest`
+- Phase 1–10 backend regression tests
 - Frontend TypeScript validation
 
 ## Migration
 
-- `2026_07_30_700001_create_ai_analytics_tables.php`
+- `2026_07_30_910001_create_reporting_invoice_tax_tables.php`

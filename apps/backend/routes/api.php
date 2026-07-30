@@ -36,9 +36,22 @@ use Modules\SaaS\Http\Controllers\Admin\AdminTenantProfileController;
 use Modules\SaaS\Http\Controllers\Admin\AdminTenantDomainController;
 use Modules\Plugins\Http\Controllers\Admin\AdminPluginController;
 use Modules\Analytics\Http\Controllers\Admin\AdminAnalyticsController;
+use Modules\Payments\Http\Controllers\PaymentController;
+use Modules\Payments\Http\Controllers\PaymentWebhookController;
+use Modules\Payments\Http\Controllers\Admin\AdminPaymentController;
+use Modules\Notifications\Http\Controllers\NotificationController;
+use Modules\Notifications\Http\Controllers\Admin\AdminNotificationController;
+use Modules\Integrations\Http\Controllers\Admin\AdminWebhookController;
+use Modules\Support\Http\Controllers\SupportTicketController;
+use Modules\Support\Http\Controllers\Admin\AdminSupportController;
+use Modules\Observability\Http\Controllers\Admin\AdminOperationsController;
+use Modules\Reporting\Http\Controllers\InvoiceController;
+use Modules\Reporting\Http\Controllers\CustomerTaxProfileController;
+use Modules\Reporting\Http\Controllers\Admin\AdminReportingController;
 
 Route::prefix('v1')->group(function (): void {
     Route::get('/health', HealthController::class)->name('api.v1.health');
+    Route::post('/payments/webhooks/{provider}/{accountCode?}', PaymentWebhookController::class)->middleware(['tenant', 'throttle:payment-webhook'])->name('api.v1.payments.webhooks');
 
     Route::middleware(['tenant', 'throttle:api'])->group(function (): void {
         Route::get('/catalog', [CatalogController::class, 'index'])->name('api.v1.catalog.index');
@@ -58,6 +71,9 @@ Route::prefix('v1')->group(function (): void {
         'rules_fraud_pricing_phase' => 'phase-6',
         'saas_plugins_phase' => 'phase-7',
         'ai_analytics_phase' => 'phase-8',
+        'payments_reconciliation_phase' => 'phase-9',
+        'engagement_operations_phase' => 'phase-10',
+        'reporting_invoicing_phase' => 'phase-11',
     ]]))->name('api.v1.platform');
 
     Route::prefix('auth')->middleware(['tenant', 'auth:sanctum', 'account.active', 'auth.session', 'throttle:api'])->group(function (): void {
@@ -88,6 +104,13 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/deposits', [DepositController::class, 'store'])->middleware(['permission:wallet.deposit.create', 'throttle:sensitive'])->name('api.v1.deposits.store');
         Route::get('/deposits/{deposit}', [DepositController::class, 'show'])->name('api.v1.deposits.show');
         Route::post('/deposits/{deposit}/cancel', [DepositController::class, 'cancel'])->middleware('throttle:sensitive')->name('api.v1.deposits.cancel');
+
+        Route::get('/payments/providers', [PaymentController::class, 'providers'])->middleware('permission:payments.view')->name('api.v1.payments.providers');
+        Route::get('/payments', [PaymentController::class, 'index'])->middleware('permission:payments.view')->name('api.v1.payments.index');
+        Route::post('/payments', [PaymentController::class, 'store'])->middleware(['permission:payments.create', 'throttle:sensitive'])->name('api.v1.payments.store');
+        Route::get('/payments/{paymentIntent}', [PaymentController::class, 'show'])->middleware('permission:payments.view')->name('api.v1.payments.show');
+        Route::post('/payments/{paymentIntent}/cancel', [PaymentController::class, 'cancel'])->middleware(['permission:payments.create', 'throttle:sensitive'])->name('api.v1.payments.cancel');
+        Route::post('/payments/{paymentIntent}/sandbox-complete', [PaymentController::class, 'simulate'])->middleware(['permission:payments.create', 'throttle:sensitive'])->name('api.v1.payments.sandbox-complete');
     });
 
     Route::middleware(['tenant', 'auth:sanctum', 'account.active', 'auth.session', 'verified', 'throttle:api'])->group(function (): void {
@@ -102,6 +125,24 @@ Route::prefix('v1')->group(function (): void {
 
         Route::get('/pricing/quote', PricingQuoteController::class)->middleware('permission:commerce.catalog.view')->name('api.v1.pricing.quote');
         Route::get('/risk/assessments', [FraudAssessmentController::class, 'index'])->middleware('permission:commerce.orders.view')->name('api.v1.risk.assessments.index');
+
+        Route::get('/notifications', [NotificationController::class, 'index'])->middleware('permission:notifications.view')->name('api.v1.notifications.index');
+        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->middleware('permission:notifications.view')->name('api.v1.notifications.unread-count');
+        Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->middleware(['permission:notifications.view', 'throttle:sensitive'])->name('api.v1.notifications.read-all');
+        Route::post('/notifications/{notification}/read', [NotificationController::class, 'read'])->middleware(['permission:notifications.view', 'throttle:sensitive'])->name('api.v1.notifications.read');
+        Route::get('/notification-preferences', [NotificationController::class, 'preferences'])->middleware('permission:notifications.preferences.manage')->name('api.v1.notification-preferences.index');
+        Route::put('/notification-preferences', [NotificationController::class, 'updatePreferences'])->middleware(['permission:notifications.preferences.manage', 'throttle:sensitive'])->name('api.v1.notification-preferences.update');
+
+        Route::get('/support/tickets', [SupportTicketController::class, 'index'])->middleware('permission:support.tickets.create')->name('api.v1.support.tickets.index');
+        Route::post('/support/tickets', [SupportTicketController::class, 'store'])->middleware(['permission:support.tickets.create', 'throttle:sensitive'])->name('api.v1.support.tickets.store');
+        Route::get('/support/tickets/{ticket}', [SupportTicketController::class, 'show'])->middleware('permission:support.tickets.create')->name('api.v1.support.tickets.show');
+        Route::post('/support/tickets/{ticket}/reply', [SupportTicketController::class, 'reply'])->middleware(['permission:support.tickets.create', 'throttle:sensitive'])->name('api.v1.support.tickets.reply');
+
+        Route::get('/invoices', [InvoiceController::class, 'index'])->middleware('permission:reporting.invoices.view')->name('api.v1.invoices.index');
+        Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->middleware('permission:reporting.invoices.view')->name('api.v1.invoices.show');
+        Route::get('/invoices/{invoice}/document', [InvoiceController::class, 'document'])->middleware('permission:reporting.invoices.view')->name('api.v1.invoices.document');
+        Route::get('/tax-profile', [CustomerTaxProfileController::class, 'show'])->middleware('permission:reporting.tax-profile.manage')->name('api.v1.tax-profile.show');
+        Route::put('/tax-profile', [CustomerTaxProfileController::class, 'update'])->middleware(['permission:reporting.tax-profile.manage', 'throttle:sensitive'])->name('api.v1.tax-profile.update');
     });
 
     Route::prefix('admin')->middleware([
@@ -188,8 +229,50 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/plugin-installations/{installation}/enable', [AdminPluginController::class, 'enable'])->middleware(['permission:plugins.manage', 'feature:plugins.marketplace', 'throttle:sensitive'])->name('api.v1.admin.plugins.enable');
         Route::post('/plugin-installations/{installation}/disable', [AdminPluginController::class, 'disable'])->middleware(['permission:plugins.manage', 'throttle:sensitive'])->name('api.v1.admin.plugins.disable');
 
+        Route::get('/payments', [AdminPaymentController::class, 'index'])->middleware('permission:payments.admin.access')->name('api.v1.admin.payments.index');
+        Route::get('/payments/provider-types', [AdminPaymentController::class, 'providerTypes'])->middleware('permission:payments.providers.manage')->name('api.v1.admin.payments.provider-types');
+        Route::post('/payments/providers', [AdminPaymentController::class, 'storeProvider'])->middleware(['permission:payments.providers.manage', 'throttle:sensitive'])->name('api.v1.admin.payments.providers.store');
+        Route::patch('/payments/providers/{providerAccount}', [AdminPaymentController::class, 'updateProvider'])->middleware(['permission:payments.providers.manage', 'throttle:sensitive'])->name('api.v1.admin.payments.providers.update');
+        Route::post('/payments/providers/{providerAccount}/rotate-webhook-secret', [AdminPaymentController::class, 'rotateWebhookSecret'])->middleware(['permission:payments.providers.manage', 'throttle:sensitive'])->name('api.v1.admin.payments.providers.rotate-secret');
+        Route::post('/payments/reconcile', [AdminPaymentController::class, 'reconcile'])->middleware(['permission:payments.reconciliation.manage', 'throttle:sensitive'])->name('api.v1.admin.payments.reconcile');
+        Route::post('/payments/intents/{paymentIntent}/refund', [AdminPaymentController::class, 'refund'])->middleware(['permission:payments.refunds.manage', 'throttle:sensitive'])->name('api.v1.admin.payments.refund');
+
         Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->middleware('permission:analytics.admin.access')->name('api.v1.admin.analytics.index');
         Route::post('/analytics/refresh', [AdminAnalyticsController::class, 'refresh'])->middleware(['permission:analytics.refresh', 'throttle:sensitive'])->name('api.v1.admin.analytics.refresh');
         Route::patch('/analytics/insights/{insight}', [AdminAnalyticsController::class, 'updateInsight'])->middleware(['permission:analytics.admin.access', 'throttle:sensitive'])->name('api.v1.admin.analytics.insights.update');
+
+        Route::get('/notifications', [AdminNotificationController::class, 'index'])->middleware('permission:notifications.admin.access')->name('api.v1.admin.notifications.index');
+        Route::post('/notifications/templates', [AdminNotificationController::class, 'storeTemplate'])->middleware(['permission:notifications.templates.manage', 'throttle:sensitive'])->name('api.v1.admin.notifications.templates.store');
+        Route::post('/notifications/test', [AdminNotificationController::class, 'sendTest'])->middleware(['permission:notifications.admin.access', 'throttle:sensitive'])->name('api.v1.admin.notifications.test');
+
+        Route::get('/webhooks', [AdminWebhookController::class, 'index'])->middleware('permission:webhooks.admin.access')->name('api.v1.admin.webhooks.index');
+        Route::post('/webhooks', [AdminWebhookController::class, 'store'])->middleware(['permission:webhooks.manage', 'throttle:sensitive'])->name('api.v1.admin.webhooks.store');
+        Route::patch('/webhooks/{endpoint}', [AdminWebhookController::class, 'update'])->middleware(['permission:webhooks.manage', 'throttle:sensitive'])->name('api.v1.admin.webhooks.update');
+        Route::post('/webhooks/{endpoint}/rotate-secret', [AdminWebhookController::class, 'rotate'])->middleware(['permission:webhooks.manage', 'throttle:sensitive'])->name('api.v1.admin.webhooks.rotate');
+        Route::post('/webhook-deliveries/{delivery}/retry', [AdminWebhookController::class, 'retry'])->middleware(['permission:webhooks.manage', 'throttle:sensitive'])->name('api.v1.admin.webhooks.retry');
+
+        Route::get('/support', [AdminSupportController::class, 'index'])->middleware('permission:support.admin.access')->name('api.v1.admin.support.index');
+        Route::get('/support/{ticket}', [AdminSupportController::class, 'show'])->middleware('permission:support.admin.access')->name('api.v1.admin.support.show');
+        Route::post('/support/{ticket}/reply', [AdminSupportController::class, 'reply'])->middleware(['permission:support.tickets.manage', 'throttle:sensitive'])->name('api.v1.admin.support.reply');
+        Route::post('/support/{ticket}/transition', [AdminSupportController::class, 'transition'])->middleware(['permission:support.tickets.manage', 'throttle:sensitive'])->name('api.v1.admin.support.transition');
+
+        Route::get('/operations', [AdminOperationsController::class, 'index'])->middleware('permission:operations.admin.access')->name('api.v1.admin.operations.index');
+        Route::post('/operations/capture', [AdminOperationsController::class, 'capture'])->middleware(['permission:operations.manage', 'throttle:sensitive'])->name('api.v1.admin.operations.capture');
+        Route::post('/operations/incidents/{incident}/acknowledge', [AdminOperationsController::class, 'acknowledge'])->middleware(['permission:operations.manage', 'throttle:sensitive'])->name('api.v1.admin.operations.incidents.acknowledge');
+        Route::post('/operations/incidents/{incident}/resolve', [AdminOperationsController::class, 'resolve'])->middleware(['permission:operations.manage', 'throttle:sensitive'])->name('api.v1.admin.operations.incidents.resolve');
+
+
+        Route::get('/reports', [AdminReportingController::class, 'index'])->middleware('permission:reporting.admin.access')->name('api.v1.admin.reports.index');
+        Route::post('/reports/invoices/orders/{order}', [AdminReportingController::class, 'generateInvoice'])->middleware(['permission:reporting.invoices.manage', 'throttle:sensitive'])->name('api.v1.admin.reports.invoices.generate');
+        Route::post('/reports/invoices/{invoice}/void', [AdminReportingController::class, 'voidInvoice'])->middleware(['permission:reporting.invoices.manage', 'throttle:sensitive'])->name('api.v1.admin.reports.invoices.void');
+        Route::get('/reports/invoices/{invoice}/document', [AdminReportingController::class, 'invoiceDocument'])->middleware('permission:reporting.invoices.manage')->name('api.v1.admin.reports.invoices.document');
+        Route::put('/reports/tax-profile', [AdminReportingController::class, 'updateTaxProfile'])->middleware(['permission:reporting.tax.manage', 'throttle:sensitive'])->name('api.v1.admin.reports.tax-profile.update');
+        Route::post('/reports/tax-rates', [AdminReportingController::class, 'storeTaxRate'])->middleware(['permission:reporting.tax.manage', 'throttle:sensitive'])->name('api.v1.admin.reports.tax-rates.store');
+        Route::patch('/reports/tax-rates/{taxRate}', [AdminReportingController::class, 'updateTaxRate'])->middleware(['permission:reporting.tax.manage', 'throttle:sensitive'])->name('api.v1.admin.reports.tax-rates.update');
+        Route::post('/reports/exports', [AdminReportingController::class, 'createExport'])->middleware(['permission:reporting.exports.manage', 'throttle:sensitive'])->name('api.v1.admin.reports.exports.store');
+        Route::get('/reports/exports/{dataExport}/download', [AdminReportingController::class, 'downloadExport'])->middleware('permission:reporting.exports.manage')->name('api.v1.admin.reports.exports.download');
+        Route::post('/reports/schedules', [AdminReportingController::class, 'storeSchedule'])->middleware(['permission:reporting.schedules.manage', 'throttle:sensitive'])->name('api.v1.admin.reports.schedules.store');
+        Route::patch('/reports/schedules/{schedule}', [AdminReportingController::class, 'updateSchedule'])->middleware(['permission:reporting.schedules.manage', 'throttle:sensitive'])->name('api.v1.admin.reports.schedules.update');
+        Route::post('/reports/schedules/{schedule}/run', [AdminReportingController::class, 'runSchedule'])->middleware(['permission:reporting.schedules.manage', 'throttle:sensitive'])->name('api.v1.admin.reports.schedules.run');
     });
 });

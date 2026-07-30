@@ -20,5 +20,10 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(10)->by((string) ($request->user()?->getAuthIdentifier() ?? $request->ip())),
             Limit::perHour(100)->by((string) ($request->user()?->getAuthIdentifier() ?? $request->ip())),
         ]);
+
+        RateLimiter::for('payment-webhook', fn (Request $request) => [
+            Limit::perMinute(120)->by($request->ip()),
+            Limit::perHour(5000)->by($request->ip()),
+        ]);
     }
 }

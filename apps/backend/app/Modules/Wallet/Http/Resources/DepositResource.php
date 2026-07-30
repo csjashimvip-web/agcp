@@ -9,6 +9,7 @@ class DepositResource extends JsonResource
         return [
             'id' => $this->id,
             'wallet_id' => $this->wallet_id,
+            'payment_intent_id' => $this->payment_intent_id,
             'user' => $this->whenLoaded('user', fn () => ['id' => $this->user->id, 'name' => $this->user->name, 'email' => $this->user->email]),
             'amount_minor' => (int) $this->amount_minor,
             'amount' => number_format($this->amount_minor / 100, 2, '.', ''),

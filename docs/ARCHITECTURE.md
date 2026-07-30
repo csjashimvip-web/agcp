@@ -106,3 +106,19 @@ The tenant resolver remains the mandatory request boundary. Phase 7 adds subscri
 ## Phase 8: Explainable AI and advanced analytics
 
 Phase 8 adds a read-oriented tenant analytics module. It derives KPI snapshots, deterministic forecasts, RFM-style customer segments, supplier rankings and evidence-backed insights from existing transactional data. Analytics never mutates wallet balances, fraud decisions or production supplier routes. The default `AiInsightProvider` is local and deterministic; reviewed external providers may be added later behind the provider contract and tenant data-governance controls.
+
+## Phase 9: Payment orchestration and reconciliation
+
+The Payments module now owns provider accounts, payment intents, attempts, verified webhook events, external refunds and reconciliation evidence. It calls Wallet application services only after provider authenticity and amount invariants pass.
+
+```text
+Payment provider
+      ↓ signed event
+Payments verification boundary
+      ↓ exact intent match
+Wallet deposit settlement
+      ↓
+Double-entry ledger + audit + outbox
+```
+
+Provider adapters cannot write ledger rows directly. Redirect URLs are presentation-only. Reconciliation remains a separate read/audit process and does not silently repair mismatches.

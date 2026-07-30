@@ -35,6 +35,12 @@ class IdentitySeeder extends Seeder
             ['slug' => 'wallet.adjustments.request', 'name' => 'Request wallet adjustments', 'group' => 'Wallet'],
             ['slug' => 'wallet.adjustments.approve', 'name' => 'Approve wallet adjustments', 'group' => 'Wallet'],
             ['slug' => 'wallet.ledger.view', 'name' => 'View tenant ledger transactions', 'group' => 'Wallet'],
+            ['slug' => 'payments.view', 'name' => 'View own payment intents', 'group' => 'Payments'],
+            ['slug' => 'payments.create', 'name' => 'Create own payment intents', 'group' => 'Payments'],
+            ['slug' => 'payments.admin.access', 'name' => 'Access payment administration', 'group' => 'Payments'],
+            ['slug' => 'payments.providers.manage', 'name' => 'Manage payment provider accounts', 'group' => 'Payments'],
+            ['slug' => 'payments.reconciliation.manage', 'name' => 'Run and review payment reconciliation', 'group' => 'Payments'],
+            ['slug' => 'payments.refunds.manage', 'name' => 'Create controlled external payment refunds', 'group' => 'Payments'],
             ['slug' => 'commerce.catalog.view', 'name' => 'View published catalog', 'group' => 'Commerce'],
             ['slug' => 'commerce.cart.manage', 'name' => 'Manage own shopping cart', 'group' => 'Commerce'],
             ['slug' => 'commerce.checkout', 'name' => 'Checkout using own wallet', 'group' => 'Commerce'],
@@ -63,6 +69,24 @@ class IdentitySeeder extends Seeder
             ['slug' => 'plugins.manage', 'name' => 'Install and configure tenant plugins', 'group' => 'Plugins'],
             ['slug' => 'analytics.admin.access', 'name' => 'Access analytics and AI insights administration', 'group' => 'Analytics'],
             ['slug' => 'analytics.refresh', 'name' => 'Refresh analytics, forecasts and explainable recommendations', 'group' => 'Analytics'],
+            ['slug' => 'notifications.view', 'name' => 'View own notifications', 'group' => 'Notifications'],
+            ['slug' => 'notifications.preferences.manage', 'name' => 'Manage own notification preferences', 'group' => 'Notifications'],
+            ['slug' => 'notifications.admin.access', 'name' => 'Access notification administration', 'group' => 'Notifications'],
+            ['slug' => 'notifications.templates.manage', 'name' => 'Manage notification templates', 'group' => 'Notifications'],
+            ['slug' => 'support.tickets.create', 'name' => 'Create and reply to own support tickets', 'group' => 'Support'],
+            ['slug' => 'support.admin.access', 'name' => 'Access support administration', 'group' => 'Support'],
+            ['slug' => 'support.tickets.manage', 'name' => 'Manage tenant support tickets', 'group' => 'Support'],
+            ['slug' => 'webhooks.admin.access', 'name' => 'Access outbound webhook administration', 'group' => 'Integrations'],
+            ['slug' => 'webhooks.manage', 'name' => 'Manage webhook endpoints and deliveries', 'group' => 'Integrations'],
+            ['slug' => 'operations.admin.access', 'name' => 'Access operations center', 'group' => 'Operations'],
+            ['slug' => 'operations.manage', 'name' => 'Capture health and manage incidents', 'group' => 'Operations'],
+            ['slug' => 'reporting.invoices.view', 'name' => 'View own invoices and invoice documents', 'group' => 'Reporting'],
+            ['slug' => 'reporting.tax-profile.manage', 'name' => 'Manage own billing and tax profile', 'group' => 'Reporting'],
+            ['slug' => 'reporting.admin.access', 'name' => 'Access enterprise reporting administration', 'group' => 'Reporting'],
+            ['slug' => 'reporting.invoices.manage', 'name' => 'Generate and manage tenant invoices', 'group' => 'Reporting'],
+            ['slug' => 'reporting.tax.manage', 'name' => 'Manage tenant tax profiles and rates', 'group' => 'Reporting'],
+            ['slug' => 'reporting.exports.manage', 'name' => 'Generate and download tenant data exports', 'group' => 'Reporting'],
+            ['slug' => 'reporting.schedules.manage', 'name' => 'Manage scheduled business reports', 'group' => 'Reporting'],
         ];
 
         foreach ($definitions as $definition) {
@@ -85,12 +109,18 @@ class IdentitySeeder extends Seeder
             'identity.sessions.manage', 'identity.audit.read', 'profile.read', 'profile.update', 'api.tokens.manage',
             'wallet.view', 'wallet.deposit.create', 'wallet.admin.access', 'wallet.deposits.review',
             'wallet.adjustments.request', 'wallet.adjustments.approve', 'wallet.ledger.view',
+            'payments.view', 'payments.create', 'payments.admin.access', 'payments.providers.manage', 'payments.reconciliation.manage', 'payments.refunds.manage',
             'commerce.catalog.view', 'commerce.cart.manage', 'commerce.checkout', 'commerce.orders.view',
+            'notifications.view', 'notifications.preferences.manage', 'support.tickets.create',
             'commerce.admin.access', 'commerce.catalog.manage', 'commerce.pricing.manage', 'commerce.inventory.manage', 'commerce.orders.manage',
             'supplier.admin.access', 'supplier.accounts.manage', 'supplier.services.manage', 'supplier.orders.manage', 'supplier.health.manage',
             'rules.admin.access', 'rules.manage', 'fraud.admin.access', 'fraud.assessments.review', 'pricing.dynamic.manage',
             'saas.admin.access', 'saas.tenant.manage', 'plugins.marketplace.view', 'plugins.manage',
             'analytics.admin.access', 'analytics.refresh',
+            'notifications.view', 'notifications.preferences.manage', 'notifications.admin.access', 'notifications.templates.manage',
+            'support.tickets.create', 'support.admin.access', 'support.tickets.manage',
+            'webhooks.admin.access', 'webhooks.manage', 'operations.admin.access', 'operations.manage',
+            'reporting.invoices.view', 'reporting.tax-profile.manage', 'reporting.admin.access', 'reporting.invoices.manage', 'reporting.tax.manage', 'reporting.exports.manage', 'reporting.schedules.manage',
         ])->pluck('id')->all());
 
         $customer = Role::query()->firstOrCreate(
@@ -98,8 +128,10 @@ class IdentitySeeder extends Seeder
             ['name' => 'Customer', 'description' => 'Default customer access.', 'is_system' => true],
         );
         $customer->permissions()->sync(Permission::query()->whereIn('slug', [
-            'profile.read', 'profile.update', 'identity.sessions.manage', 'api.tokens.manage', 'wallet.view', 'wallet.deposit.create',
+            'profile.read', 'profile.update', 'identity.sessions.manage', 'api.tokens.manage', 'wallet.view', 'wallet.deposit.create', 'payments.view', 'payments.create',
             'commerce.catalog.view', 'commerce.cart.manage', 'commerce.checkout', 'commerce.orders.view',
+            'notifications.view', 'notifications.preferences.manage', 'support.tickets.create',
+            'reporting.invoices.view', 'reporting.tax-profile.manage',
         ])->pluck('id')->all());
 
         $password = (string) env('INITIAL_ADMIN_PASSWORD', '');
