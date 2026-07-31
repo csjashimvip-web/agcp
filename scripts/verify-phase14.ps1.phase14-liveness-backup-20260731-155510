@@ -1,0 +1,60 @@
+﻿$ErrorActionPreference = "Stop"
+Set-StrictMode -Version Latest
+Set-Location (Resolve-Path (Join-Path $PSScriptRoot ".."))
+
+& ".\scripts\security-audit.ps1" -EnvironmentFile ".env"
+
+$compose = @("-f", "docker-compose.yml", "-f", "docker-compose.dev.yml")
+$testExec = @(
+    "exec", "-T",
+    "-e", "APP_ENV=testing",
+    "-e", "DB_CONNECTION=sqlite",
+    "-e", "DB_DATABASE=:memory:",
+    "-e", "CACHE_STORE=array",
+    "-e", "SESSION_DRIVER=array",
+    "-e", "QUEUE_CONNECTION=sync",
+    "-e", "MAIL_MAILER=array",
+    "backend"
+)
+
+$identityTest = "apps\backend\tests\Feature\IdentityAccessTest.php"
+$identitySource = [System.IO.File]::ReadAllText((Resolve-Path $identityTest))
+if (-not $identitySource.Contains("two_factor_confirmed_at' => `$twoFactorConfirmedAt") -or
+    -not $identitySource.Contains("return `$user->refresh();")) {
+    throw "IdentityAccessTest.php is not using the safe forceFill test helper. Apply the Phase 14 final patch first."
+}
+
+& docker compose @compose up -d backend frontend nginx
+if ($LASTEXITCODE -ne 0) { throw "Required application services could not be started." }
+
+& docker compose @compose @testExec php artisan config:clear
+if ($LASTEXITCODE -ne 0) { throw "Testing config clear failed." }
+
+# Run every feature-test file in its own PHP process. This preserves full
+# regression coverage while preventing process-level state leakage between
+# unrelated feature modules.
+$testFiles = Get-ChildItem "apps\backend\tests\Feature" -Filter "*Test.php" |
+    Sort-Object Name |
+    ForEach-Object { "tests/Feature/$($_.Name)" }
+
+foreach ($testFile in $testFiles) {
+    Write-Host "Running $testFile" -ForegroundColor Cyan
+    & docker compose @compose @testExec php artisan test $testFile
+    if ($LASTEXITCODE -ne 0) {
+        throw "Backend regression failed in $testFile."
+    }
+}
+
+& docker compose @compose exec -T backend php artisan optimize:clear
+if ($LASTEXITCODE -ne 0) { throw "Development cache restore failed." }
+
+& docker compose @compose exec -T frontend npm run lint
+if ($LASTEXITCODE -ne 0) { throw "Frontend lint failed." }
+
+& docker compose @compose exec -T frontend npm run typecheck
+if ($LASTEXITCODE -ne 0) { throw "Frontend typecheck failed." }
+
+& ".\scripts\uat-smoke.ps1"
+& ".\scripts\load-smoke.ps1" -Requests 30
+
+Write-Host "Phase 14 verification passed." -ForegroundColor Green

@@ -4,7 +4,6 @@ namespace Modules\Identity\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Laravel\Sanctum\TransientToken;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureAdminTwoFactor
@@ -18,12 +17,10 @@ class EnsureAdminTwoFactor
         }
 
         /*
-         * Sanctum SPA browser authentication attaches a TransientToken.
-         * Reject real API tokens, but allow interactive browser sessions.
+         * Administrative APIs are browser-session only.
+         * Sanctum SPA cookie authentication does not send an Authorization bearer header.
          */
-        $token = $user->currentAccessToken();
-
-        if ($token !== null && ! ($token instanceof TransientToken)) {
+        if ($request->bearerToken() !== null) {
             return response()->json([
                 'message' => 'Administrative access requires an interactive browser session.',
                 'code' => 'ADMIN_BROWSER_SESSION_REQUIRED',

@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $compose = @('-f', 'docker-compose.yml', '-f', 'docker-compose.dev.yml')

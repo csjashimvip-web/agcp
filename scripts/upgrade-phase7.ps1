@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 Set-Location (Resolve-Path (Join-Path $PSScriptRoot ".."))
 Write-Host "Upgrading AGCP Phase 6 to Phase 7 Multi-Tenant SaaS and Plugin Marketplace..." -ForegroundColor Cyan

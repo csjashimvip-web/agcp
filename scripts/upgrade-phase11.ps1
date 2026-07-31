@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 Set-Location (Resolve-Path (Join-Path $PSScriptRoot ".."))
 Write-Host "Upgrading AGCP Phase 10 to Phase 11 Enterprise Reporting and Invoicing..." -ForegroundColor Cyan

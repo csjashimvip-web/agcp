@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 Set-Location (Resolve-Path (Join-Path $PSScriptRoot ".."))
 Write-Host "Upgrading AGCP Phase 7 to Phase 8 Explainable AI and Advanced Analytics..." -ForegroundColor Cyan
