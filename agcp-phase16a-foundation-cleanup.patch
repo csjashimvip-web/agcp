@@ -1,0 +1,2723 @@
+diff --git a/.env.example b/.env.example
+index 87b59b3..f6eca7f 100644
+--- a/.env.example
++++ b/.env.example
+@@ -7,7 +7,7 @@ APP_DEBUG=true
+ APP_URL=http://localhost:8080
+ APP_KEY=CHANGE_ME_APP_KEY
+ APP_PREVIOUS_KEYS=
+-APP_VERSION=11.0.0-phase11
++APP_VERSION=1.1.0-dev
+ LOG_CHANNEL=stack
+ LOG_LEVEL=debug
+ 
+diff --git a/.env.production.example b/.env.production.example
+new file mode 100644
+index 0000000..89e77b0
+--- /dev/null
++++ b/.env.production.example
+@@ -0,0 +1,117 @@
++COMPOSE_PROJECT_NAME=agcp-prod
++BIND_ADDRESS=127.0.0.1
++APP_PORT=8080
++
++APP_NAME="Araabi Global Commerce Platform"
++APP_ENV=production
++APP_DEBUG=false
++APP_URL=https://CHANGE_ME_DOMAIN
++APP_KEY=CHANGE_ME_APP_KEY
++APP_PREVIOUS_KEYS=
++APP_VERSION=1.1.0-dev
++RELEASE_VERSION=1.1.0-dev
++RELEASE_CHANNEL=development
++DEPLOYMENT_ENVIRONMENT=production
++LOG_CHANNEL=daily
++LOG_LEVEL=warning
++
++DB_CONNECTION=mysql
++DB_HOST=mysql
++DB_PORT=3306
++DB_DATABASE=agcp
++DB_USERNAME=agcp
++DB_PASSWORD=CHANGE_ME_DB_PASSWORD
++MYSQL_ROOT_PASSWORD=CHANGE_ME_MYSQL_ROOT_PASSWORD
++
++CACHE_STORE=redis
++SESSION_DRIVER=redis
++SESSION_LIFETIME=120
++SESSION_ENCRYPT=true
++SESSION_DOMAIN=.CHANGE_ME_DOMAIN
++SESSION_SECURE_COOKIE=true
++SESSION_SAME_SITE=lax
++QUEUE_CONNECTION=redis
++REDIS_CLIENT=phpredis
++REDIS_HOST=redis
++REDIS_PASSWORD=CHANGE_ME_REDIS_PASSWORD
++REDIS_PORT=6379
++REDIS_DB=0
++REDIS_CACHE_DB=1
++REDIS_QUEUE_DB=2
++
++FRONTEND_URL=https://CHANGE_ME_DOMAIN
++NEXT_PUBLIC_APP_NAME="Araabi Global Commerce Platform"
++NEXT_PUBLIC_API_BASE_URL=/api/v1
++NEXT_TELEMETRY_DISABLED=1
++
++SANCTUM_STATEFUL_DOMAINS=CHANGE_ME_DOMAIN
++FORTIFY_PREFIX=api/v1/auth
++PASSWORD_RESET_URL=https://CHANGE_ME_DOMAIN/reset-password
++EMAIL_VERIFICATION_URL=https://CHANGE_ME_DOMAIN/verify-email
++PASSKEYS_USER_HANDLE_SECRET=CHANGE_ME_PASSKEYS_SECRET
++PASSKEYS_ALLOWED_ORIGINS=https://CHANGE_ME_DOMAIN
++
++MAIL_MAILER=smtp
++MAIL_HOST=CHANGE_ME_SMTP_HOST
++MAIL_PORT=587
++MAIL_USERNAME=CHANGE_ME_SMTP_USERNAME
++MAIL_PASSWORD=CHANGE_ME_SMTP_PASSWORD
++MAIL_ENCRYPTION=tls
++MAIL_FROM_ADDRESS=noreply@CHANGE_ME_DOMAIN
++MAIL_FROM_NAME="Araabi Global"
++
++TENANCY_MODE=single
++PLATFORM_TENANT_HEADER=X-Tenant-ID
++OUTBOX_BATCH_SIZE=100
++OUTBOX_MAX_ATTEMPTS=10
++SUPPLIER_POLL_BATCH_SIZE=100
++AUDIT_RETENTION_DAYS=2555
++
++INITIAL_ADMIN_NAME="AGCP Administrator"
++INITIAL_ADMIN_EMAIL=CHANGE_ME_ADMIN_EMAIL
++INITIAL_ADMIN_PASSWORD=CHANGE_ME_INITIAL_ADMIN_PASSWORD
++
++FRAUD_REVIEW_SCORE=60
++FRAUD_BLOCK_SCORE=80
++FRAUD_HIGH_VALUE_MINOR=50000
++FRAUD_CRITICAL_VALUE_MINOR=200000
++DYNAMIC_PRICE_QUOTE_TTL=300
++TENANT_DEFAULT_PLAN=enterprise
++DOMAIN_VERIFICATION_MODE=manual
++PLUGIN_ALLOW_UNAPPROVED=false
++SAAS_USAGE_PERIOD=monthly
++ANALYTICS_PROVIDER=deterministic
++ANALYTICS_WINDOW_DAYS=30
++ANALYTICS_FORECAST_HORIZON_DAYS=14
++ANALYTICS_REFRESH_TIME=02:10
++
++PAYMENT_INTENT_EXPIRY_MINUTES=30
++PAYMENT_WEBHOOK_TOLERANCE_SECONDS=300
++PAYMENT_RECONCILIATION_WINDOW_DAYS=30
++PAYMENT_RECONCILIATION_TIME=03:10
++SANDBOX_PAYMENT_WEBHOOK_SECRET=CHANGE_ME_PAYMENT_WEBHOOK_SECRET
++
++OPERATIONS_SNAPSHOT_INTERVAL_MINUTES=5
++SUPPORT_DEFAULT_FIRST_RESPONSE_MINUTES=480
++SUPPORT_DEFAULT_RESOLUTION_HOURS=48
++WEBHOOK_MAX_RESPONSE_BYTES=10000
++WEBHOOK_ALLOW_LOG_SINK=false
++NOTIFICATION_DEFAULT_PROVIDER=mail
++
++REPORT_EXPORT_DISK=local
++REPORT_EXPORT_DIRECTORY=exports
++REPORT_EXPORT_RETENTION_DAYS=30
++REPORT_SCHEDULE_BATCH_SIZE=50
++INVOICE_DUE_DAYS=0
++
++BACKUP_ENABLED=true
++BACKUP_DISK=local
++BACKUP_DIRECTORY=backups/database
++BACKUP_RETENTION_DAYS=14
++BACKUP_DAILY_TIME=01:30
++BACKUP_MAX_AGE_HOURS=36
++BACKUP_ENCRYPTION_KEY=CHANGE_ME_BASE64_32_BYTE_KEY
++BACKUP_COMMAND_TIMEOUT_SECONDS=1800
++BACKUP_ENCRYPTION_CHUNK_BYTES=1048576
++MYSQLDUMP_BINARY=mysqldump
++RUNTIME_HEARTBEAT_TTL_MINUTES=3
+diff --git a/.github/workflows/security.yml b/.github/workflows/security.yml
+index 6dc5c79..d36e715 100644
+--- a/.github/workflows/security.yml
++++ b/.github/workflows/security.yml
+@@ -1,7 +1,7 @@
+ name: Security
+ on:
+   push:
+-    branches: [main]
++    branches: [master, main]
+   pull_request:
+   schedule:
+     - cron: '17 3 * * 1'
+diff --git a/.gitignore b/.gitignore
+index 2ee5538..c8c3564 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,6 +1,7 @@
+ .env
+ .env.*
+ !.env.example
++!.env.production.example
+ .DS_Store
+ Thumbs.db
+ .idea/
+@@ -27,3 +28,8 @@ apps/web/out/
+ apps/web/.env.local
+ 
+ apps/web/tsconfig.tsbuildinfo
++
++# Local repair and generated backup artifacts
++*.backup-*
++*.phase*-backup*
++*.phase*-manual-backup
+diff --git a/AGCP-PHASE14-HOTFIX-README.md b/AGCP-PHASE14-HOTFIX-README.md
+deleted file mode 100644
+index baf17cc..0000000
+--- a/AGCP-PHASE14-HOTFIX-README.md
++++ /dev/null
+@@ -1,17 +0,0 @@
+-# AGCP Phase 14 Admin Token and Phase 15 Readiness Hotfix
+-
+-Run from PowerShell:
+-
+-```powershell
+-Copy-Item "$env:USERPROFILE\Downloads\fix-agcp-phase14-admin-token-and-readiness.ps1" "C:\Projects\agcp\" -Force
+-cd C:\Projects\agcp
+-Set-ExecutionPolicy -Scope Process Bypass -Force
+-.\fix-agcp-phase14-admin-token-and-readiness.ps1
+-```
+-
+-Then:
+-
+-```powershell
+-.\scripts\verify-phase14.ps1
+-.\scripts\verify-phase15.ps1
+-```
+diff --git a/AGCP-PHASE14-IDENTITY-V3-README.md b/AGCP-PHASE14-IDENTITY-V3-README.md
+deleted file mode 100644
+index be85d3d..0000000
+--- a/AGCP-PHASE14-IDENTITY-V3-README.md
++++ /dev/null
+@@ -1,22 +0,0 @@
+-# AGCP Phase 14 Identity Test Helper Hotfix V3
+-
+-Root cause: the production User model intentionally does not mass-assign
+-`email_verified_at` or `two_factor_confirmed_at`. The test helper passed both
+-fields to `User::create()`, so Laravel discarded them. The request then stopped
+-at the email-verification middleware and returned a generic 403 before the
+-admin 2FA middleware could run.
+-
+-Run:
+-
+-```powershell
+-cd C:\Projects\agcp
+-Set-ExecutionPolicy -Scope Process Bypass -Force
+-.\fix-agcp-phase14-identity-test-helper-v3.ps1
+-```
+-
+-Then:
+-
+-```powershell
+-.\scripts\verify-phase14.ps1
+-.\scripts\verify-phase15.ps1
+-```
+diff --git a/AGCP_FRONTEND_HYDRATION_FIX_README.txt b/AGCP_FRONTEND_HYDRATION_FIX_README.txt
+deleted file mode 100644
+index 48a137c..0000000
+--- a/AGCP_FRONTEND_HYDRATION_FIX_README.txt
++++ /dev/null
+@@ -1,24 +0,0 @@
+-AGCP Frontend Hydration Hotfix
+-
+-Cause found in the supplied project/logs:
+-- Clicking Sign in performs a native GET /login? instead of the React handler.
+-- Next.js development HMR requests return 404 behind Nginx.
+-- Therefore the login form is not reliably hydrated; the browser clears the form and reloads it.
+-
+-Apply:
+-1. Put fix-agcp-frontend-hydration.ps1 in C:\Projects\agcp
+-2. Open PowerShell in C:\Projects\agcp
+-3. Run:
+-   Set-ExecutionPolicy -Scope Process Bypass
+-   .\fix-agcp-frontend-hydration.ps1
+-4. Wait 20-30 seconds.
+-5. Open a new Incognito window:
+-   http://localhost:8080/login
+-
+-The script:
+-- Backs up Nginx and dev Compose configuration.
+-- Adds WebSocket/HMR proxy headers to Nginx.
+-- Runs Next.js dev using the webpack dev server.
+-- Clears stale .next cache.
+-- Rebuilds only frontend and nginx.
+-- Does not remove MySQL or Redis volumes.
+diff --git a/AGCP_PHASE14_FIXED_PROJECT_REPORT.md b/AGCP_PHASE14_FIXED_PROJECT_REPORT.md
+deleted file mode 100644
+index e62a080..0000000
+--- a/AGCP_PHASE14_FIXED_PROJECT_REPORT.md
++++ /dev/null
+@@ -1,28 +0,0 @@
+-# AGCP uploaded-project fix report
+-
+-## Confirmed root cause
+-
+-`IdentityAccessTest.php` created users with `email_verified_at` and
+-`two_factor_confirmed_at` through `User::create()`. Those columns are intentionally
+-not in the production model's `$fillable` array, so Laravel discarded both values.
+-The admin requests therefore stopped at the email-verification middleware and
+-returned a generic 403 before the admin 2FA middleware ran.
+-
+-## Changes applied
+-
+-- Updated the test helper to extract the two protected timestamps.
+-- Created the user using normal mass-assignable fields only.
+-- Persisted security timestamps with `forceFill()->save()`.
+-- Returned a refreshed user model.
+-- Preserved bearer-token browser-session enforcement.
+-- Preserved isolated SQLite test execution in Phase 14.
+-- Replaced the broken V3 PowerShell helper with a V4-compatible launcher.
+-- Added a robust V4 repair script for existing local copies.
+-
+-## Validation completed in the artifact environment
+-
+-- PHP syntax checked for 396 PHP files.
+-- Zero PHP syntax failures.
+-- Full Laravel tests were not executed here because the uploaded archive does not
+-  contain `vendor/` and this artifact environment has no Docker daemon. Run the
+-  supplied verification command on the user's existing Docker setup.
+diff --git a/APPLY_PHASE12.md b/APPLY_PHASE12.md
+deleted file mode 100644
+index 8aaf074..0000000
+--- a/APPLY_PHASE12.md
++++ /dev/null
+@@ -1,31 +0,0 @@
+-# Apply AGCP Phase 12
+-
+-This patch upgrades the verified Phase 11 project to Phase 12: Reliability, Encrypted Backups and Production Readiness.
+-
+-## Apply
+-
+-1. Make a copy of the current project folder.
+-2. Extract this patch over `C:\Projects\agcp` and allow replacement of matching files.
+-3. Open PowerShell:
+-
+-```powershell
+-cd C:\Projects\agcp
+-Set-ExecutionPolicy -Scope Process Bypass -Force
+-.\scripts\upgrade-phase12.ps1
+-```
+-
+-## Verify
+-
+-```powershell
+-.\scripts\verify-phase12.ps1
+-```
+-
+-## Open
+-
+-- Reliability administration: `http://localhost:8080/admin/reliability`
+-- Liveness: `http://localhost:8080/api/v1/health/live`
+-- Readiness: `http://localhost:8080/api/v1/health/ready`
+-
+-## Safety
+-
+-The upgrade does not wipe MySQL, delete Docker volumes or import a restore into the running database. It creates one initial encrypted backup and verifies it non-destructively.
+diff --git a/APPLY_PHASE13_15.md b/APPLY_PHASE13_15.md
+deleted file mode 100644
+index d0bdc86..0000000
+--- a/APPLY_PHASE13_15.md
++++ /dev/null
+@@ -1,47 +0,0 @@
+-# Apply AGCP Phases 13–15
+-
+-## Prerequisites
+-
+-- Phase 12 files are already installed.
+-- Docker Desktop is running.
+-- Current local data is backed up.
+-- The project is at `C:\Projects\agcp`.
+-
+-## Apply
+-
+-```powershell
+-cd C:\Projects\agcp
+-Set-ExecutionPolicy -Scope Process Bypass -Force
+-.\scripts\upgrade-phase13-15.ps1
+-```
+-
+-The script:
+-
+-1. Backs up `.env`, frontend `package.json`, and Nginx configuration.
+-2. Sets the local code version to `15.0.0-phase15`.
+-3. Preserves the current database and Docker volumes.
+-4. Rebuilds the local development stack.
+-5. Runs migrations without resetting data.
+-6. Refreshes queues and Phase 12 reliability heartbeat.
+-7. Creates and verifies an encrypted backup when Phase 12 commands exist.
+-8. Runs Phase 13–15 verification.
+-
+-## Verify
+-
+-```powershell
+-.\scripts\verify-phase13-15.ps1
+-```
+-
+-## Production
+-
+-Do not use the local `.env` in production. Create `.env.production` from:
+-
+-```text
+-.env.production.example
+-```
+-
+-Then follow:
+-
+-```text
+-docs/PHASE_13_PRODUCTION_DEPLOYMENT.md
+-```
+diff --git a/APPLY_PHASE6.md b/APPLY_PHASE6.md
+deleted file mode 100644
+index 330cf4c..0000000
+--- a/APPLY_PHASE6.md
++++ /dev/null
+@@ -1,14 +0,0 @@
+-# AGCP Phase 6 Upgrade Patch
+-
+-Copy every file and folder in this patch into the root of your existing Phase 5 Hotfix 1 project (`C:\Projects\agcp`) and choose **Replace All**. Keep the existing `.env` file.
+-
+-Then run:
+-
+-```powershell
+-cd C:\Projects\agcp
+-Set-ExecutionPolicy -Scope Process Bypass
+-.\scripts\upgrade-phase6.ps1
+-.\scripts\verify-phase6.ps1
+-```
+-
+-The script does not run `migrate:fresh`, `db:wipe`, or `docker compose down -v`; MySQL and Redis data volumes remain intact.
+diff --git a/APPLY_PHASE7.md b/APPLY_PHASE7.md
+deleted file mode 100644
+index 7d0c82b..0000000
+--- a/APPLY_PHASE7.md
++++ /dev/null
+@@ -1,10 +0,0 @@
+-# AGCP Phase 7 Upgrade Patch
+-
+-This patch upgrades the verified AGCP Phase 6 project to Phase 7: Multi-Tenant SaaS Control Plane and Plugin Marketplace Foundation.
+-
+-1. Preserve the existing `.env` file.
+-2. Copy all patch contents into the AGCP project root and choose **Replace All**.
+-3. Run `scripts/upgrade-phase7.ps1` from PowerShell.
+-4. Run `scripts/verify-phase7.ps1` after the upgrade.
+-
+-The upgrade does not run `migrate:fresh`, `db:wipe`, or `docker compose down -v`.
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index a20c0cf..c864113 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,16 @@
+ # Changelog
+ 
++## Unreleased — 1.1.0-dev
++
++### Changed
++
++- Replaced patch-specific root documentation with the platform README.
++- Normalized development version metadata.
++- Added and tracked a sanitized production environment template.
++- Removed obsolete tracked repair artifacts and stale backup files.
++- Added the product completion audit and roadmap.
++- Enabled the security workflow for the active `master` branch.
++
+ ## 1.0.0 — Core platform completion
+ 
+ ### Added
+diff --git a/PATCH_MANIFEST.txt b/PATCH_MANIFEST.txt
+deleted file mode 100644
+index 07c1665..0000000
+--- a/PATCH_MANIFEST.txt
++++ /dev/null
+@@ -1,71 +0,0 @@
+-AGCP Phase 4 Upgrade Patch
+-Base: Phase 3 Hotfix 1
+-
+-README.md
+-.env.example
+-docs/ARCHITECTURE.md
+-docs/COMMERCE_CORE.md
+-docs/BUILD_MANIFEST.md
+-docs/PHASE_4_REPORT.md
+-scripts/upgrade-phase2.ps1
+-scripts/setup.sh
+-scripts/verify-phase4.ps1
+-scripts/setup.ps1
+-scripts/restart-after-backend-fix.ps1
+-scripts/repair-phase3-hotfix1.ps1
+-scripts/upgrade-phase4.ps1
+-apps/backend/.env.example
+-apps/web/package.json
+-apps/web/components/PortalHeader.tsx
+-apps/web/lib/commerce-api.ts
+-apps/web/app/page.tsx
+-apps/web/app/globals.css
+-apps/web/app/catalog/page.tsx
+-apps/web/app/dashboard/page.tsx
+-apps/web/app/orders/page.tsx
+-apps/web/app/cart/page.tsx
+-apps/web/app/admin/commerce/page.tsx
+-apps/backend/routes/api.php
+-apps/backend/config/modules.php
+-apps/backend/tests/Feature/CommerceCoreTest.php
+-apps/backend/app/Modules/Commerce/README.md
+-apps/backend/app/Modules/Commerce/Infrastructure/CommerceServiceProvider.php
+-apps/backend/app/Modules/Commerce/Domain/Enums/CatalogItemType.php
+-apps/backend/app/Modules/Commerce/Domain/Enums/OrderStatus.php
+-apps/backend/app/Modules/Commerce/Domain/Events/OrderPlaced.php
+-apps/backend/app/Modules/Commerce/Infrastructure/Models/InventoryLocation.php
+-apps/backend/app/Modules/Commerce/Infrastructure/Models/PriceList.php
+-apps/backend/app/Modules/Commerce/Infrastructure/Models/CatalogItem.php
+-apps/backend/app/Modules/Commerce/Infrastructure/Models/CartItem.php
+-apps/backend/app/Modules/Commerce/Infrastructure/Models/Order.php
+-apps/backend/app/Modules/Commerce/Infrastructure/Models/CatalogVariant.php
+-apps/backend/app/Modules/Commerce/Infrastructure/Models/OrderStatusHistory.php
+-apps/backend/app/Modules/Commerce/Infrastructure/Models/InventoryLevel.php
+-apps/backend/app/Modules/Commerce/Infrastructure/Models/CatalogCategory.php
+-apps/backend/app/Modules/Commerce/Infrastructure/Models/Cart.php
+-apps/backend/app/Modules/Commerce/Infrastructure/Models/OrderItem.php
+-apps/backend/app/Modules/Commerce/Infrastructure/Models/CatalogPrice.php
+-apps/backend/app/Modules/Commerce/Infrastructure/Models/InventoryReservation.php
+-apps/backend/app/Modules/Commerce/Http/Resources/CartResource.php
+-apps/backend/app/Modules/Commerce/Http/Resources/CatalogItemResource.php
+-apps/backend/app/Modules/Commerce/Http/Resources/OrderResource.php
+-apps/backend/app/Modules/Commerce/Http/Controllers/CheckoutController.php
+-apps/backend/app/Modules/Commerce/Http/Controllers/CatalogController.php
+-apps/backend/app/Modules/Commerce/Http/Controllers/CartController.php
+-apps/backend/app/Modules/Commerce/Http/Controllers/OrderController.php
+-apps/backend/app/Modules/Commerce/Http/Controllers/Admin/AdminCatalogController.php
+-apps/backend/app/Modules/Commerce/Http/Controllers/Admin/AdminInventoryController.php
+-apps/backend/app/Modules/Commerce/Http/Controllers/Admin/AdminPricingController.php
+-apps/backend/app/Modules/Commerce/Http/Controllers/Admin/AdminOrderController.php
+-apps/backend/app/Modules/Commerce/Application/Services/PricingService.php
+-apps/backend/app/Modules/Commerce/Application/Services/InventoryService.php
+-apps/backend/app/Modules/Commerce/Application/Services/CheckoutService.php
+-apps/backend/app/Modules/Commerce/Application/Services/OrderService.php
+-apps/backend/app/Modules/Commerce/Application/Services/CartService.php
+-apps/backend/database/seeders/DatabaseSeeder.php
+-apps/backend/database/seeders/CommerceSeeder.php
+-apps/backend/database/seeders/IdentitySeeder.php
+-apps/backend/database/migrations/2026_07_30_300001_create_commerce_core_tables.php
+-docs/adr/0002-transactional-outbox.md
+-docs/adr/0001-modular-monolith.md
+-docs/adr/0003-multitenancy.md
+diff --git a/PATCH_README.md b/PATCH_README.md
+deleted file mode 100644
+index 7b0cbdf..0000000
+--- a/PATCH_README.md
++++ /dev/null
+@@ -1,19 +0,0 @@
+-# AGCP Phase 2 Upgrade Patch
+-
+-This patch upgrades the verified AGCP Phase 1 backend-startup-fix project to Phase 2 Identity and Access.
+-
+-## Windows instructions
+-
+-1. Back up `C:\Projects\agcp\.env`.
+-2. Copy every file and folder from this patch into `C:\Projects\agcp`.
+-3. Choose **Replace All** when Windows asks.
+-4. Open PowerShell in `C:\Projects\agcp` and run:
+-
+-```powershell
+-Set-ExecutionPolicy -Scope Process Bypass
+-.\scripts\upgrade-phase2.ps1
+-```
+-
+-The upgrade preserves MySQL and Redis data. Changed Composer and NPM dependency volumes are synchronized automatically from the newly built images.
+-
+-See `docs/PHASE_2_REPORT.md` and `docs/IDENTITY_AND_ACCESS.md` after applying the patch.
+diff --git a/PAYMENT_HOTFIX1_README.md b/PAYMENT_HOTFIX1_README.md
+deleted file mode 100644
+index 1adc2e1..0000000
+--- a/PAYMENT_HOTFIX1_README.md
++++ /dev/null
+@@ -1,19 +0,0 @@
+-# AGCP Phase 11 Payment Hotfix 1
+-
+-This hotfix corrects Eloquent relationship foreign keys for payment provider accounts.
+-
+-The database uses `provider_account_id`, while Laravel's default relationship convention inferred `payment_provider_account_id` from the model name. No migration or data reset is required.
+-
+-Apply the patch files over the existing project and run:
+-
+-```powershell
+-cd C:\Projects\agcp
+-Set-ExecutionPolicy -Scope Process Bypass -Force
+-.\scripts\repair-phase11-payment-hotfix1.ps1
+-```
+-
+-Then run:
+-
+-```powershell
+-.\scripts\verify-phase11.ps1
+-```
+diff --git a/PHASE12_PATCH_README.md b/PHASE12_PATCH_README.md
+deleted file mode 100644
+index 844a039..0000000
+--- a/PHASE12_PATCH_README.md
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# AGCP Phase 12 Upgrade Patch
+-
+-Phase 12 adds production-readiness checks, runtime heartbeats, encrypted MySQL logical backups, authenticated integrity drills, retention processing, health probes and a platform reliability dashboard.
+-
+-Apply with `scripts/upgrade-phase12.ps1`, then verify with `scripts/verify-phase12.ps1`.
+diff --git a/PHASE13_15_PATCH_README.md b/PHASE13_15_PATCH_README.md
+deleted file mode 100644
+index b110e09..0000000
+--- a/PHASE13_15_PATCH_README.md
++++ /dev/null
+@@ -1,58 +0,0 @@
+-# AGCP Phases 13–15 Completion Bundle
+-
+-This bundle completes the remaining core roadmap after Phase 12:
+-
+-- **Phase 13:** Production Deployment & DevOps
+-- **Phase 14:** Security, Performance & UAT
+-- **Phase 15:** Launch, Documentation & Handover
+-
+-## Important safety rules
+-
+-- This patch does **not** delete Docker volumes or reset the database.
+-- It does **not** overwrite `.env`.
+-- Production deployment requires a separately prepared `.env.production`.
+-- Run the local completion script first, then perform server deployment only after verification.
+-- Never commit `.env`, `.env.production`, database dumps, encryption keys, or live credentials.
+-
+-## Quick start on Windows
+-
+-Extract this ZIP into the AGCP project root:
+-
+-```text
+-C:\Projects\agcp
+-```
+-
+-Then run:
+-
+-```powershell
+-cd C:\Projects\agcp
+-Set-ExecutionPolicy -Scope Process Bypass -Force
+-.\scripts\upgrade-phase13-15.ps1
+-```
+-
+-Verify all remaining phases:
+-
+-```powershell
+-.\scripts\verify-phase13-15.ps1
+-```
+-
+-## Production deployment
+-
+-1. Copy `.env.production.example` to `.env.production`.
+-2. Replace every `CHANGE_ME_...` value.
+-3. Follow `docs/PHASE_13_PRODUCTION_DEPLOYMENT.md`.
+-4. On the Linux server run:
+-
+-```bash
+-chmod +x scripts/server/*.sh
+-./scripts/server/preflight.sh
+-./scripts/server/deploy.sh
+-```
+-
+-## Final release
+-
+-After production UAT passes:
+-
+-```powershell
+-.\scripts\release-phase15.ps1 -Version 1.0.0
+-```
+diff --git a/PHASE_12_PATCH_FILES.txt b/PHASE_12_PATCH_FILES.txt
+deleted file mode 100644
+index 226942e..0000000
+--- a/PHASE_12_PATCH_FILES.txt
++++ /dev/null
+@@ -1,38 +0,0 @@
+-.env.example
+-APPLY_PHASE12.md
+-PHASE12_PATCH_README.md
+-apps/backend/Dockerfile
+-apps/backend/app/Http/Controllers/Api/V1/LivenessController.php
+-apps/backend/app/Http/Controllers/Api/V1/ReadinessController.php
+-apps/backend/app/Modules/Reliability/Application/Services/BackupCipher.php
+-apps/backend/app/Modules/Reliability/Application/Services/BackupVerificationService.php
+-apps/backend/app/Modules/Reliability/Application/Services/DatabaseBackupService.php
+-apps/backend/app/Modules/Reliability/Application/Services/EnvironmentReadinessService.php
+-apps/backend/app/Modules/Reliability/Http/Controllers/Admin/AdminReliabilityController.php
+-apps/backend/app/Modules/Reliability/Infrastructure/Console/CreateDatabaseBackup.php
+-apps/backend/app/Modules/Reliability/Infrastructure/Console/PurgeExpiredBackups.php
+-apps/backend/app/Modules/Reliability/Infrastructure/Console/RecordRuntimeHeartbeat.php
+-apps/backend/app/Modules/Reliability/Infrastructure/Console/RunReleaseCheck.php
+-apps/backend/app/Modules/Reliability/Infrastructure/Console/VerifyDatabaseBackup.php
+-apps/backend/app/Modules/Reliability/Infrastructure/Models/ReleaseCheck.php
+-apps/backend/app/Modules/Reliability/Infrastructure/Models/RestoreDrill.php
+-apps/backend/app/Modules/Reliability/Infrastructure/Models/RuntimeHeartbeat.php
+-apps/backend/app/Modules/Reliability/Infrastructure/Models/SystemBackup.php
+-apps/backend/app/Modules/Reliability/Infrastructure/ReliabilityServiceProvider.php
+-apps/backend/app/Modules/Reliability/README.md
+-apps/backend/config/modules.php
+-apps/backend/config/reliability.php
+-apps/backend/database/migrations/2026_07_31_920001_create_reliability_operations_tables.php
+-apps/backend/database/seeders/IdentitySeeder.php
+-apps/backend/routes/api.php
+-apps/backend/routes/console.php
+-apps/backend/tests/Feature/ReliabilityProductionReadinessTest.php
+-apps/web/app/admin/page.tsx
+-apps/web/app/admin/reliability/page.tsx
+-apps/web/components/PortalHeader.tsx
+-apps/web/lib/reliability-api.ts
+-docs/PHASE_12_BUILD_MANIFEST.md
+-docs/PHASE_12_REPORT.md
+-docs/PRODUCTION_READINESS_AND_RECOVERY.md
+-scripts/upgrade-phase12.ps1
+-scripts/verify-phase12.ps1
+diff --git a/PHASE_13_15_PATCH_FILES.txt b/PHASE_13_15_PATCH_FILES.txt
+deleted file mode 100644
+index 8413b92..0000000
+--- a/PHASE_13_15_PATCH_FILES.txt
++++ /dev/null
+@@ -1,37 +0,0 @@
+-.env.production.example
+-.github/workflows/ci.yml
+-.github/workflows/release.yml
+-APPLY_PHASE13_15.md
+-CHANGELOG.md
+-PHASE13_15_PATCH_README.md
+-VERSION
+-docker-compose.production.yml
+-docs/ADMIN_OPERATIONS_GUIDE.md
+-docs/DISASTER_RECOVERY_RUNBOOK.md
+-docs/OPERATIONS_RUNBOOK.md
+-docs/PHASE_13_PRODUCTION_DEPLOYMENT.md
+-docs/PHASE_13_REPORT.md
+-docs/PHASE_14_REPORT.md
+-docs/PHASE_14_SECURITY_PERFORMANCE_UAT.md
+-docs/PHASE_15_LAUNCH_AND_HANDOVER.md
+-docs/PHASE_15_REPORT.md
+-infrastructure/mysql/conf.d/agcp-production.cnf
+-infrastructure/nginx/production.conf
+-scripts/create-release-package.ps1
+-scripts/lib/agcp-phase-tools.ps1
+-scripts/load-smoke.ps1
+-scripts/release-phase15.ps1
+-scripts/security-audit.ps1
+-scripts/server/deploy.sh
+-scripts/server/preflight.sh
+-scripts/server/rollback.sh
+-scripts/uat-smoke.ps1
+-scripts/upgrade-phase13-15.ps1
+-scripts/upgrade-phase13.ps1
+-scripts/upgrade-phase14.ps1
+-scripts/upgrade-phase15.ps1
+-scripts/verify-phase13-15.ps1
+-scripts/verify-phase13.ps1
+-scripts/verify-phase14.ps1
+-scripts/verify-phase15.ps1
+-PHASE_13_15_PATCH_FILES.txt
+diff --git a/PHASE_2_PATCH_FILES.txt b/PHASE_2_PATCH_FILES.txt
+deleted file mode 100644
+index a8ecdc2..0000000
+--- a/PHASE_2_PATCH_FILES.txt
++++ /dev/null
+@@ -1,84 +0,0 @@
+-.env.example
+-CONTRIBUTING.md
+-README.md
+-SECURITY.md
+-apps/backend/.env.example
+-apps/backend/Dockerfile
+-apps/backend/app/Models/User.php
+-apps/backend/app/Modules/Identity/Application/Actions/CreateNewUser.php
+-apps/backend/app/Modules/Identity/Application/Actions/PasswordValidationRules.php
+-apps/backend/app/Modules/Identity/Application/Actions/ResetUserPassword.php
+-apps/backend/app/Modules/Identity/Application/Actions/UpdateUserPassword.php
+-apps/backend/app/Modules/Identity/Application/Actions/UpdateUserProfileInformation.php
+-apps/backend/app/Modules/Identity/Application/Services/DeviceDescriptor.php
+-apps/backend/app/Modules/Identity/Domain/Concerns/HasRolesAndPermissions.php
+-apps/backend/app/Modules/Identity/Http/Controllers/Admin/RoleController.php
+-apps/backend/app/Modules/Identity/Http/Controllers/Admin/UserController.php
+-apps/backend/app/Modules/Identity/Http/Controllers/Auth/ApiTokenController.php
+-apps/backend/app/Modules/Identity/Http/Controllers/Auth/CurrentUserController.php
+-apps/backend/app/Modules/Identity/Http/Controllers/Auth/DeviceController.php
+-apps/backend/app/Modules/Identity/Http/Controllers/Auth/PasskeyController.php
+-apps/backend/app/Modules/Identity/Http/Controllers/Auth/SessionController.php
+-apps/backend/app/Modules/Identity/Http/Middleware/EnsureAccountActive.php
+-apps/backend/app/Modules/Identity/Http/Middleware/EnsureAdminTwoFactor.php
+-apps/backend/app/Modules/Identity/Http/Middleware/RequirePermission.php
+-apps/backend/app/Modules/Identity/Http/Middleware/TrackAuthenticatedSession.php
+-apps/backend/app/Modules/Identity/Http/Resources/DeviceResource.php
+-apps/backend/app/Modules/Identity/Http/Resources/SessionResource.php
+-apps/backend/app/Modules/Identity/Http/Resources/UserResource.php
+-apps/backend/app/Modules/Identity/Infrastructure/IdentityServiceProvider.php
+-apps/backend/app/Modules/Identity/Infrastructure/Listeners/RecordSuccessfulLogin.php
+-apps/backend/app/Modules/Identity/Infrastructure/Listeners/RecordSuccessfulLogout.php
+-apps/backend/app/Modules/Identity/Infrastructure/Models/AuthSession.php
+-apps/backend/app/Modules/Identity/Infrastructure/Models/Permission.php
+-apps/backend/app/Modules/Identity/Infrastructure/Models/Role.php
+-apps/backend/app/Modules/Identity/Infrastructure/Models/TenantMembership.php
+-apps/backend/app/Modules/Identity/Infrastructure/Models/UserDevice.php
+-apps/backend/app/Providers/AppServiceProvider.php
+-apps/backend/app/Providers/FortifyServiceProvider.php
+-apps/backend/bootstrap/app.php
+-apps/backend/bootstrap/providers.php
+-apps/backend/composer.json
+-apps/backend/config/auth.php
+-apps/backend/config/cors.php
+-apps/backend/config/fortify.php
+-apps/backend/config/hashing.php
+-apps/backend/config/mail.php
+-apps/backend/config/modules.php
+-apps/backend/config/passkeys.php
+-apps/backend/config/sanctum.php
+-apps/backend/config/services.php
+-apps/backend/config/session.php
+-apps/backend/database/migrations/2026_07_30_100001_create_identity_and_access_tables.php
+-apps/backend/database/migrations/2026_07_30_100002_create_passkeys_table.php
+-apps/backend/database/seeders/DatabaseSeeder.php
+-apps/backend/database/seeders/IdentitySeeder.php
+-apps/backend/docker/entrypoint.sh
+-apps/backend/routes/api.php
+-apps/backend/tests/Feature/IdentityAccessTest.php
+-apps/web/Dockerfile
+-apps/web/app/admin/page.tsx
+-apps/web/app/dashboard/page.tsx
+-apps/web/app/forgot-password/page.tsx
+-apps/web/app/globals.css
+-apps/web/app/layout.tsx
+-apps/web/app/login/page.tsx
+-apps/web/app/page.tsx
+-apps/web/app/register/page.tsx
+-apps/web/app/reset-password/page.tsx
+-apps/web/app/security/page.tsx
+-apps/web/components/AuthShell.tsx
+-apps/web/components/PortalHeader.tsx
+-apps/web/docker/entrypoint.sh
+-apps/web/lib/auth-api.ts
+-apps/web/package.json
+-docs/ARCHITECTURE.md
+-docs/BUILD_MANIFEST.md
+-docs/IDENTITY_AND_ACCESS.md
+-docs/PHASE_2_REPORT.md
+-docs/adr/0004-fortify-sanctum-rbac.md
+-infrastructure/nginx/default.conf
+-scripts/setup.ps1
+-scripts/setup.sh
+-scripts/upgrade-phase2.ps1
+-scripts/verify-phase2.ps1
+diff --git a/README-PHASE14-FINAL-FIX.md b/README-PHASE14-FINAL-FIX.md
+deleted file mode 100644
+index 87bfab0..0000000
+--- a/README-PHASE14-FINAL-FIX.md
++++ /dev/null
+@@ -1,27 +0,0 @@
+-# AGCP Phase 14 Final Fix
+-
+-This patch fixes the actual uploaded project source:
+-
+-1. The identity test helper now persists email verification and 2FA timestamps
+-   with `forceFill()` instead of mass assignment.
+-2. The Phase 14 backend regression runs each feature-test file in a separate
+-   PHP process, preventing process-level test state leakage.
+-3. The Next.js 16 / React 19 lint compatibility rules are scoped to the
+-   existing legacy client pages and API client files; the rest of ESLint stays enabled.
+-
+-## Apply
+-
+-Extract this ZIP into `C:\Projects\agcp` and allow replacement, then run:
+-
+-```powershell
+-cd C:\Projects\agcp
+-Set-ExecutionPolicy -Scope Process Bypass -Force
+-.\apply-agcp-phase14-final-fix.ps1
+-```
+-
+-After Phase 14 passes:
+-
+-```powershell
+-.\scripts\verify-phase15.ps1
+-.\scripts\verify-phase13-15.ps1
+-```
+diff --git a/README.md b/README.md
+index c230c1a..6e1c5b2 100644
+--- a/README.md
++++ b/README.md
+@@ -1,13 +1,83 @@
+-# AGCP Phase 11 Payment Hotfix Script Fix
++# Araabi Global Commerce Platform (AGCP)
+ 
+-This patch replaces only `scripts/repair-phase11-payment-hotfix1.ps1`.
++AGCP is a tenant-aware enterprise commerce and SaaS platform built as an event-driven modular monolith. It combines identity and access control, double-entry wallets, commerce, supplier routing, rules and fraud controls, SaaS entitlements, analytics, payments, notifications, support, reporting, and reliability operations in one deployable system.
+ 
+-It fixes the Windows PowerShell parser error caused by placing a colon immediately after `$LASTEXITCODE` inside an interpolated string.
++## Technology stack
+ 
+-Apply the file over the existing project and run:
++- Laravel 13 and PHP 8.4
++- Next.js 16, React 19, and TypeScript 5.9
++- MySQL 8.4
++- Redis 8
++- Nginx
++- Docker Compose
++
++## Core capabilities
++
++- Multi-tenant request resolution, memberships, roles, and permissions
++- Fortify and Sanctum authentication, email verification, 2FA, passkeys, sessions, devices, and API tokens
++- Double-entry wallet ledger, deposits, holds, adjustments, and refunds
++- Product catalog, variants, prices, inventory, carts, checkout, and order lifecycle
++- Supplier routing, health scoring, failover, polling, and refund orchestration
++- Versioned rules, fraud assessments, dynamic pricing, and manual review
++- SaaS subscriptions, feature entitlements, usage limits, branding, domains, and approved plugins
++- Deterministic analytics, forecasts, customer segments, supplier recommendations, and AI insights
++- Provider-neutral payment intents, signed webhooks, refunds, and reconciliation
++- Notifications, outbound webhooks, support tickets, operations snapshots, and incidents
++- Tax profiles, immutable invoices, exports, scheduled reports, encrypted backups, and restore drills
++
++## Local development
++
++1. Copy the example environment file:
++
++   ```powershell
++   Copy-Item .env.example .env
++   ```
++
++2. Replace every `CHANGE_ME` value in `.env`.
++
++3. Start the development stack:
++
++   ```powershell
++   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
++   ```
++
++4. Run migrations and seed the initial tenant and administrator:
++
++   ```powershell
++   docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend php artisan migrate --force
++   docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend php artisan db:seed --class=DatabaseSeeder --force
++   ```
++
++5. Open the application at `http://localhost:8080`.
++
++## Verification
+ 
+ ```powershell
+-cd C:\Projects\agcp
+ Set-ExecutionPolicy -Scope Process Bypass -Force
+-.\scripts\repair-phase11-payment-hotfix1.ps1
++.\scripts\verify-phase13-15.ps1
+ ```
++
++The verification suite covers backend regression tests, frontend lint and type checking, health probes, UAT smoke checks, load smoke checks, production configuration checks, and release readiness.
++
++## Production preparation
++
++Use `.env.production.example` as the production template. Do not commit `.env`, credentials, generated keys, database dumps, or backup archives.
++
++Production deployment guidance is available in:
++
++- `docs/PHASE_13_PRODUCTION_DEPLOYMENT.md`
++- `docs/OPERATIONS_RUNBOOK.md`
++- `docs/DISASTER_RECOVERY_RUNBOOK.md`
++- `docs/PHASE_15_LAUNCH_AND_HANDOVER.md`
++
++## Current development line
++
++The published stable release is `v1.0.1`. Ongoing product-completion work is tracked under `1.1.0-dev` and is described in `docs/PHASE_16_COMPLETION_AUDIT.md` and `docs/PRODUCT_COMPLETION_ROADMAP.md`.
++
++## Security
++
++Report security issues according to `SECURITY.md`. Never post credentials, tokens, private keys, `.env` files, or production data in public issues or chat messages.
++
++## License
++
++Proprietary. See `LICENSE.md`.
+diff --git a/VERSION b/VERSION
+index 3eefcb9..336c367 100644
+--- a/VERSION
++++ b/VERSION
+@@ -1 +1 @@
+-1.0.0
++1.1.0-dev
+diff --git a/apply-agcp-phase14-final-fix.ps1 b/apply-agcp-phase14-final-fix.ps1
+deleted file mode 100644
+index 0c719eb..0000000
+--- a/apply-agcp-phase14-final-fix.ps1
++++ /dev/null
+@@ -1,360 +0,0 @@
+-﻿$ErrorActionPreference = "Stop"
+-Set-StrictMode -Version Latest
+-
+-$ProjectRoot = "C:\Projects\agcp"
+-Set-Location $ProjectRoot
+-
+-$Required = @(
+-    "apps\backend\tests\Feature\IdentityAccessTest.php",
+-    "apps\web\eslint.config.mjs",
+-    "scripts\verify-phase14.ps1"
+-)
+-
+-foreach ($Path in $Required) {
+-    if (-not (Test-Path $Path)) { throw "Required project file is missing: $Path" }
+-    Copy-Item $Path "$Path.phase14-final-backup-$(Get-Date -Format 'yyyyMMdd-HHmmss')" -Force
+-}
+-
+-$Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+-$Utf8Bom = New-Object System.Text.UTF8Encoding($true)
+-
+-$IdentityTest = @'
+-<?php
+-
+-use App\Models\User;
+-use Illuminate\Foundation\Testing\RefreshDatabase;
+-use Illuminate\Support\Facades\Hash;
+-use Modules\Identity\Infrastructure\Models\Permission;
+-use Modules\Identity\Infrastructure\Models\Role;
+-use Modules\Identity\Infrastructure\Models\TenantMembership;
+-use Modules\Tenancy\Infrastructure\Models\Tenant;
+-
+-uses(RefreshDatabase::class);
+-
+-function identityTenant(): Tenant
+-{
+-    return Tenant::query()->create([
+-        'name' => 'Araabi Global',
+-        'slug' => 'araabi-global',
+-        'status' => 'active',
+-        'default_currency' => 'USD',
+-        'timezone' => 'UTC',
+-        'activated_at' => now(),
+-    ]);
+-}
+-
+-function identityPermission(string $slug): Permission
+-{
+-    return Permission::query()->create([
+-        'name' => str($slug)->replace('.', ' ')->title()->toString(),
+-        'slug' => $slug,
+-        'group' => 'Testing',
+-    ]);
+-}
+-
+-function identityRole(Tenant $tenant, string $slug, array $permissions, bool $system = false): Role
+-{
+-    $role = Role::query()->create([
+-        'tenant_id' => $tenant->id,
+-        'name' => str($slug)->replace('-', ' ')->title()->toString(),
+-        'slug' => $slug,
+-        'is_system' => $system,
+-    ]);
+-
+-    $role->permissions()->sync(collect($permissions)->map(fn (Permission $permission) => $permission->id));
+-
+-    return $role;
+-}
+-
+-function identityUser(Tenant $tenant, array $attributes = []): User
+-{
+-    // These security timestamps are intentionally not mass assignable.
+-    $emailVerifiedAt = array_key_exists('email_verified_at', $attributes)
+-        ? $attributes['email_verified_at']
+-        : now();
+-
+-    $twoFactorConfirmedAt = array_key_exists('two_factor_confirmed_at', $attributes)
+-        ? $attributes['two_factor_confirmed_at']
+-        : null;
+-
+-    unset($attributes['email_verified_at'], $attributes['two_factor_confirmed_at']);
+-
+-    $user = User::query()->create(array_merge([
+-        'name' => 'Identity User',
+-        'email' => fake()->unique()->safeEmail(),
+-        'password' => 'Correct-Horse-Battery-Staple!42',
+-        'status' => 'active',
+-        'locale' => 'en',
+-        'timezone' => 'UTC',
+-    ], $attributes));
+-
+-    $user->forceFill([
+-        'email_verified_at' => $emailVerifiedAt,
+-        'two_factor_confirmed_at' => $twoFactorConfirmedAt,
+-    ])->save();
+-
+-    TenantMembership::query()->create([
+-        'tenant_id' => $tenant->id,
+-        'user_id' => $user->id,
+-        'status' => 'active',
+-        'joined_at' => now(),
+-    ]);
+-
+-    return $user->refresh();
+-}
+-
+-it('registers a customer inside the resolved tenant', function (): void {
+-    $tenant = identityTenant();
+-    $customer = identityRole($tenant, 'customer', [
+-        identityPermission('profile.read'),
+-        identityPermission('profile.update'),
+-    ], true);
+-
+-    $response = $this->postJson('/api/v1/auth/register', [
+-        'name' => 'New Customer',
+-        'email' => 'new.customer@example.test',
+-        'password' => 'Correct-Horse-Battery-Staple!42',
+-        'password_confirmation' => 'Correct-Horse-Battery-Staple!42',
+-        'terms' => true,
+-    ]);
+-
+-    $response->assertSuccessful();
+-
+-    $user = User::query()->where('email', 'new.customer@example.test')->firstOrFail();
+-    expect(Hash::check('Correct-Horse-Battery-Staple!42', $user->password))->toBeTrue()
+-        ->and($user->memberships()->where('tenant_id', $tenant->id)->where('status', 'active')->exists())->toBeTrue()
+-        ->and($user->roles()->whereKey($customer->id)->exists())->toBeTrue();
+-});
+-
+-it('blocks inactive accounts even when an old session still exists', function (): void {
+-    $tenant = identityTenant();
+-    $user = identityUser($tenant, ['status' => 'suspended']);
+-
+-    $this->actingAs($user)
+-        ->getJson('/api/v1/auth/me')
+-        ->assertForbidden()
+-        ->assertJsonPath('code', 'ACCOUNT_NOT_ACTIVE');
+-});
+-
+-it('requires verified two factor authentication for admin access', function (): void {
+-    $tenant = identityTenant();
+-    $adminPermission = identityPermission('identity.admin.access');
+-    $role = identityRole($tenant, 'tenant-admin', [$adminPermission], true);
+-    $user = identityUser($tenant, ['two_factor_confirmed_at' => null]);
+-    $user->roles()->attach($role);
+-
+-    $this->actingAs($user)
+-        ->getJson('/api/v1/admin/users')
+-        ->assertForbidden()
+-        ->assertJsonPath('code', 'ADMIN_TWO_FACTOR_REQUIRED');
+-});
+-
+-it('allows a verified two factor administrator to list only tenant members', function (): void {
+-    $tenant = identityTenant();
+-    $otherTenant = Tenant::query()->create([
+-        'name' => 'Other Company',
+-        'slug' => 'other-company',
+-        'status' => 'active',
+-        'default_currency' => 'USD',
+-        'timezone' => 'UTC',
+-    ]);
+-
+-    $adminPermission = identityPermission('identity.admin.access');
+-    $role = identityRole($tenant, 'tenant-admin', [$adminPermission], true);
+-    $admin = identityUser($tenant, ['email' => 'admin@example.test', 'two_factor_confirmed_at' => now()]);
+-    $admin->roles()->attach($role);
+-    identityUser($tenant, ['email' => 'tenant.customer@example.test']);
+-    identityUser($otherTenant, ['email' => 'outside@example.test']);
+-
+-    $response = $this->actingAs($admin)->getJson('/api/v1/admin/users');
+-
+-    $response->assertSuccessful()
+-        ->assertJsonFragment(['email' => 'tenant.customer@example.test'])
+-        ->assertJsonMissing(['email' => 'outside@example.test']);
+-});
+-
+-it('does not permit tenant role APIs to assign a platform role', function (): void {
+-    $tenant = identityTenant();
+-    $adminAccess = identityPermission('identity.admin.access');
+-    $manageRoles = identityPermission('identity.roles.manage');
+-    $tenantAdmin = identityRole($tenant, 'tenant-admin', [$adminAccess, $manageRoles], true);
+-    $admin = identityUser($tenant, ['two_factor_confirmed_at' => now()]);
+-    $admin->roles()->attach($tenantAdmin);
+-    $customer = identityUser($tenant);
+-
+-    $platformRole = Role::query()->create([
+-        'tenant_id' => null,
+-        'name' => 'Platform Super Administrator',
+-        'slug' => 'platform-super-admin',
+-        'is_system' => true,
+-    ]);
+-    $platformRole->permissions()->attach($adminAccess);
+-
+-    $this->actingAs($admin)
+-        ->postJson("/api/v1/admin/users/{$customer->id}/roles/{$platformRole->id}")
+-        ->assertNotFound();
+-
+-    expect($customer->roles()->whereKey($platformRole->id)->exists())->toBeFalse();
+-});
+-
+-it('rejects bearer-token access to interactive administration', function (): void {
+-    $tenant = identityTenant();
+-    $adminAccess = identityPermission('identity.admin.access');
+-    $role = identityRole($tenant, 'tenant-admin', [$adminAccess], true);
+-    $admin = identityUser($tenant, ['two_factor_confirmed_at' => now()]);
+-    $admin->roles()->attach($role);
+-
+-    $plainTextToken = $admin
+-        ->createToken('identity-admin-test', ['identity.admin.access'])
+-        ->plainTextToken;
+-
+-    $this->withToken($plainTextToken)
+-        ->getJson('/api/v1/admin/users')
+-        ->assertForbidden()
+-        ->assertJsonPath('code', 'ADMIN_BROWSER_SESSION_REQUIRED');
+-});
+-
+-'@
+-[System.IO.File]::WriteAllText(
+-    (Join-Path $ProjectRoot "apps\backend\tests\Feature\IdentityAccessTest.php"),
+-    $IdentityTest,
+-    $Utf8NoBom
+-)
+-
+-$EslintConfig = @'
+-import { defineConfig, globalIgnores } from "eslint/config";
+-import nextVitals from "eslint-config-next/core-web-vitals";
+-import nextTs from "eslint-config-next/typescript";
+-
+-const legacyClientPageCompatibility = {
+-  name: "agcp/legacy-client-page-compatibility",
+-  files: ["app/**/*.tsx"],
+-  rules: {
+-    "react-hooks/set-state-in-effect": "off",
+-    "react-hooks/immutability": "off",
+-    "react-hooks/exhaustive-deps": "off",
+-    "@typescript-eslint/no-explicit-any": "off",
+-    "@typescript-eslint/no-unused-expressions": "off",
+-  },
+-};
+-
+-const legacyApiClientCompatibility = {
+-  name: "agcp/legacy-api-client-compatibility",
+-  files: ["lib/**/*.ts"],
+-  rules: {
+-    "@typescript-eslint/no-explicit-any": "off",
+-  },
+-};
+-
+-const postcssCompatibility = {
+-  name: "agcp/postcss-compatibility",
+-  files: ["postcss.config.mjs"],
+-  rules: {
+-    "import/no-anonymous-default-export": "off",
+-  },
+-};
+-
+-export default defineConfig([
+-  ...nextVitals,
+-  ...nextTs,
+-  legacyClientPageCompatibility,
+-  legacyApiClientCompatibility,
+-  postcssCompatibility,
+-  globalIgnores([".next/**", "out/**", "next-env.d.ts"]),
+-]);
+-
+-'@
+-[System.IO.File]::WriteAllText(
+-    (Join-Path $ProjectRoot "apps\web\eslint.config.mjs"),
+-    $EslintConfig,
+-    $Utf8NoBom
+-)
+-
+-$Verify14 = @'
+-$ErrorActionPreference = "Stop"
+-Set-StrictMode -Version Latest
+-Set-Location (Resolve-Path (Join-Path $PSScriptRoot ".."))
+-
+-& ".\scripts\security-audit.ps1" -EnvironmentFile ".env"
+-
+-$compose = @("-f", "docker-compose.yml", "-f", "docker-compose.dev.yml")
+-$testExec = @(
+-    "exec", "-T",
+-    "-e", "APP_ENV=testing",
+-    "-e", "DB_CONNECTION=sqlite",
+-    "-e", "DB_DATABASE=:memory:",
+-    "-e", "CACHE_STORE=array",
+-    "-e", "SESSION_DRIVER=array",
+-    "-e", "QUEUE_CONNECTION=sync",
+-    "-e", "MAIL_MAILER=array",
+-    "backend"
+-)
+-
+-$identityTest = "apps\backend\tests\Feature\IdentityAccessTest.php"
+-$identitySource = [System.IO.File]::ReadAllText((Resolve-Path $identityTest))
+-if (-not $identitySource.Contains("two_factor_confirmed_at' => `$twoFactorConfirmedAt") -or
+-    -not $identitySource.Contains("return `$user->refresh();")) {
+-    throw "IdentityAccessTest.php is not using the safe forceFill test helper. Apply the Phase 14 final patch first."
+-}
+-
+-& docker compose @compose up -d backend frontend nginx
+-if ($LASTEXITCODE -ne 0) { throw "Required application services could not be started." }
+-
+-& docker compose @compose @testExec php artisan config:clear
+-if ($LASTEXITCODE -ne 0) { throw "Testing config clear failed." }
+-
+-# Run every feature-test file in its own PHP process. This preserves full
+-# regression coverage while preventing process-level state leakage between
+-# unrelated feature modules.
+-$testFiles = Get-ChildItem "apps\backend\tests\Feature" -Filter "*Test.php" |
+-    Sort-Object Name |
+-    ForEach-Object { "tests/Feature/$($_.Name)" }
+-
+-foreach ($testFile in $testFiles) {
+-    Write-Host "Running $testFile" -ForegroundColor Cyan
+-    & docker compose @compose @testExec php artisan test $testFile
+-    if ($LASTEXITCODE -ne 0) {
+-        throw "Backend regression failed in $testFile."
+-    }
+-}
+-
+-& docker compose @compose exec -T backend php artisan optimize:clear
+-if ($LASTEXITCODE -ne 0) { throw "Development cache restore failed." }
+-
+-& docker compose @compose exec -T frontend npm run lint
+-if ($LASTEXITCODE -ne 0) { throw "Frontend lint failed." }
+-
+-& docker compose @compose exec -T frontend npm run typecheck
+-if ($LASTEXITCODE -ne 0) { throw "Frontend typecheck failed." }
+-
+-& ".\scripts\uat-smoke.ps1"
+-& ".\scripts\load-smoke.ps1" -Requests 30
+-
+-Write-Host "Phase 14 verification passed." -ForegroundColor Green
+-
+-'@
+-[System.IO.File]::WriteAllText(
+-    (Join-Path $ProjectRoot "scripts\verify-phase14.ps1"),
+-    $Verify14,
+-    $Utf8Bom
+-)
+-
+-Write-Host "AGCP Phase 14 final source fixes installed." -ForegroundColor Green
+-
+-$Compose = @("-f", "docker-compose.yml", "-f", "docker-compose.dev.yml")
+-& docker compose @Compose up -d backend frontend nginx
+-if ($LASTEXITCODE -ne 0) { throw "Required Docker services could not be started." }
+-
+-Start-Sleep -Seconds 12
+-
+-& docker compose @Compose exec -T backend php -l tests/Feature/IdentityAccessTest.php
+-if ($LASTEXITCODE -ne 0) { throw "IdentityAccessTest.php syntax check failed." }
+-
+-& docker compose @Compose exec -T frontend node --check eslint.config.mjs
+-if ($LASTEXITCODE -ne 0) { throw "ESLint config syntax check failed." }
+-
+-Write-Host "Running complete Phase 14 verification..." -ForegroundColor Cyan
+-& ".\scripts\verify-phase14.ps1"
+-
+-Write-Host "Phase 14 final repair completed successfully." -ForegroundColor Green
+-Write-Host "Next command: .\scripts\verify-phase15.ps1" -ForegroundColor Yellow
+diff --git a/apps/backend/.env.example b/apps/backend/.env.example
+index 241cde5..d8a7649 100644
+--- a/apps/backend/.env.example
++++ b/apps/backend/.env.example
+@@ -3,7 +3,7 @@ APP_ENV=local
+ APP_KEY=
+ APP_DEBUG=true
+ APP_URL=http://localhost:8080
+-APP_VERSION=11.0.0-phase11
++APP_VERSION=1.1.0-dev
+ LOG_CHANNEL=stack
+ LOG_LEVEL=debug
+ DB_CONNECTION=mysql
+diff --git a/apps/web/package.json b/apps/web/package.json
+index 4424a89..86d10a7 100644
+--- a/apps/web/package.json
++++ b/apps/web/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "agcp-web",
+-  "version": "15.0.0-phase15",
++  "version": "1.1.0-dev",
+   "private": true,
+   "engines": {
+     "node": ">=22.0.0"
+diff --git a/docker-compose.dev.yml.backup-20260731-015326 b/docker-compose.dev.yml.backup-20260731-015326
+deleted file mode 100644
+index 9448905..0000000
+--- a/docker-compose.dev.yml.backup-20260731-015326
++++ /dev/null
+@@ -1,54 +0,0 @@
+-services:
+-  backend:
+-    build:
+-      target: development
+-    volumes:
+-      - ./apps/backend:/var/www/html
+-      - backend_vendor:/var/www/html/vendor
+-      - backend_storage:/var/www/html/storage
+-      - backend_cache:/var/www/html/bootstrap/cache
+-
+-  queue-critical:
+-    build:
+-      target: development
+-    volumes:
+-      - ./apps/backend:/var/www/html
+-      - backend_vendor:/var/www/html/vendor
+-      - backend_storage:/var/www/html/storage
+-      - backend_cache:/var/www/html/bootstrap/cache
+-
+-  queue-default:
+-    build:
+-      target: development
+-    volumes:
+-      - ./apps/backend:/var/www/html
+-      - backend_vendor:/var/www/html/vendor
+-      - backend_storage:/var/www/html/storage
+-      - backend_cache:/var/www/html/bootstrap/cache
+-
+-  scheduler:
+-    build:
+-      target: development
+-    volumes:
+-      - ./apps/backend:/var/www/html
+-      - backend_vendor:/var/www/html/vendor
+-      - backend_storage:/var/www/html/storage
+-      - backend_cache:/var/www/html/bootstrap/cache
+-
+-  frontend:
+-    build:
+-      target: development
+-    command: ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
+-    environment:
+-      NODE_ENV: development
+-      WATCHPACK_POLLING: "true"
+-      NEXT_TELEMETRY_DISABLED: 1
+-    volumes:
+-      - ./apps/web:/app
+-      - frontend_node_modules:/app/node_modules
+-      - frontend_next:/app/.next
+-
+-volumes:
+-  backend_vendor:
+-  frontend_node_modules:
+-  frontend_next:
+diff --git a/docs/PHASE_16_COMPLETION_AUDIT.md b/docs/PHASE_16_COMPLETION_AUDIT.md
+new file mode 100644
+index 0000000..c1dfe94
+--- /dev/null
++++ b/docs/PHASE_16_COMPLETION_AUDIT.md
+@@ -0,0 +1,46 @@
++# Phase 16 — Product Completion Audit
++
++## Audit basis
++
++The audit reviewed the `v1.0.1` source tree at commit `4e364f61dfaba827cbfee679230e6843104b41ea`.
++
++## What is already strong
++
++- Event-driven modular-monolith backend with explicit tenancy boundaries
++- Identity, RBAC, 2FA, passkeys, session and device tracking
++- Double-entry wallet and deposit settlement
++- Commerce, supplier routing, rules, fraud and dynamic pricing
++- SaaS entitlements, plugins, analytics and reconciliation
++- Notifications, webhooks, support, reports, invoices and reliability controls
++- Automated backend regression tests and frontend static checks
++- Docker-based local and production topologies
++
++## Blocking gaps before production deployment
++
++1. Release hygiene and version metadata were inconsistent.
++2. The tracked source tree still contained temporary hotfix, patch and backup artifacts.
++3. `.env.production.example` existed locally but was ignored and absent from the release archive.
++4. The root README described an old Phase 11 hotfix instead of the platform.
++5. Dependency lockfiles are missing, so builds are not reproducible.
++6. The security workflow watches `main`, while the active branch is `master`.
++7. Live payment, supplier, SMTP/SMS/push integrations are not connected.
++8. Customer-facing legal, account-profile and full email-verification experiences are incomplete.
++9. Physical-commerce shipping addresses, delivery methods and shipment tracking are not modeled.
++10. Frontend unit/E2E/accessibility coverage and backend static-analysis coverage are absent.
++
++## Phase 16A result
++
++This cleanup patch:
++
++- replaces the root README;
++- begins the `1.1.0-dev` completion line;
++- aligns version metadata;
++- tracks a sanitized production environment template;
++- removes obsolete top-level repair artifacts and stale backup files;
++- expands ignore rules for future generated backups;
++- updates the security workflow to run on both `master` and `main`;
++- adds the completion roadmap.
++
++## Remaining work
++
++See `docs/PRODUCT_COMPLETION_ROADMAP.md`.
+diff --git a/docs/PRODUCT_COMPLETION_ROADMAP.md b/docs/PRODUCT_COMPLETION_ROADMAP.md
+new file mode 100644
+index 0000000..b07029f
+--- /dev/null
++++ b/docs/PRODUCT_COMPLETION_ROADMAP.md
+@@ -0,0 +1,48 @@
++# AGCP Product Completion Roadmap
++
++## Phase 16 — Foundation and release integrity
++
++- Clean tracked repair artifacts and stale backups
++- Normalize README, version and environment examples
++- Track `.env.production.example`
++- Add Composer and npm lockfiles
++- Make CI reproducible and branch-correct
++- Add release-integrity validation
++
++## Phase 17 — Customer experience completion
++
++- Account profile and password-change screens
++- Dedicated email-verification result and resend flow
++- Terms, privacy, refund and acceptable-use pages
++- Product-detail and order-detail experiences
++- Responsive, permission-aware navigation
++- Consistent loading, empty, validation and error states
++- Remove internal phase labels from customer-facing copy
++
++## Phase 18 — Commerce operations completion
++
++- Customer address book
++- Shipping and billing addresses on carts/orders/invoices
++- Delivery methods, shipping charges and shipment tracking
++- Coupon and promotion management
++- Return and refund request workflow
++- Inventory movement history and stock adjustment audit
++
++## Phase 19 — Integration completion
++
++- At least one certified live payment adapter
++- At least one real supplier adapter
++- Production SMTP provider
++- Optional SMS and push providers
++- Automated DNS/domain verification and SSL state synchronization
++- Provider health, credential rotation and integration runbooks
++
++## Phase 20 — Quality, compliance and launch gate
++
++- Frontend unit and Playwright E2E tests
++- Accessibility checks
++- Backend static analysis and code coverage
++- OpenAPI documentation
++- Dependency and container vulnerability checks
++- Data retention, privacy export/deletion and legal review
++- Production rehearsal, rollback rehearsal and final launch approval
+diff --git a/fix-agcp-frontend-hydration.ps1 b/fix-agcp-frontend-hydration.ps1
+deleted file mode 100644
+index d9bd544..0000000
+--- a/fix-agcp-frontend-hydration.ps1
++++ /dev/null
+@@ -1,144 +0,0 @@
+-$ErrorActionPreference = 'Stop'
+-
+-$root = (Get-Location).Path
+-$nginxPath = Join-Path $root 'infrastructure\nginx\default.conf'
+-$devComposePath = Join-Path $root 'docker-compose.dev.yml'
+-
+-if (-not (Test-Path $nginxPath) -or -not (Test-Path $devComposePath)) {
+-    throw 'Run this script from the AGCP project root, for example: C:\Projects\agcp'
+-}
+-
+-$stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+-Copy-Item $nginxPath "$nginxPath.backup-$stamp" -Force
+-Copy-Item $devComposePath "$devComposePath.backup-$stamp" -Force
+-
+-$nginx = @'
+-limit_req_zone $binary_remote_addr zone=agcp_api:10m rate=30r/s;
+-
+-map $http_upgrade $connection_upgrade {
+-    default upgrade;
+-    ''      close;
+-}
+-
+-upstream agcp_frontend { server frontend:3000; keepalive 32; }
+-upstream agcp_backend { server backend:9000; keepalive 16; }
+-
+-server {
+-    listen 80 default_server;
+-    server_name _;
+-    server_tokens off;
+-    client_max_body_size 10m;
+-
+-    location = /nginx-health {
+-        access_log off;
+-        default_type text/plain;
+-        return 200 "ok\n";
+-    }
+-
+-    location ^~ /api/ {
+-        limit_req zone=agcp_api burst=60 nodelay;
+-        include fastcgi_params;
+-        fastcgi_param SCRIPT_FILENAME /var/www/html/public/index.php;
+-        fastcgi_param SCRIPT_NAME /index.php;
+-        fastcgi_param DOCUMENT_ROOT /var/www/html/public;
+-        fastcgi_param HTTP_PROXY "";
+-        fastcgi_param HTTP_X_FORWARDED_PROTO $scheme;
+-        fastcgi_param HTTP_X_FORWARDED_HOST $http_host;
+-        fastcgi_pass agcp_backend;
+-        fastcgi_read_timeout 120s;
+-        fastcgi_hide_header X-Powered-By;
+-    }
+-
+-    location = /sanctum/csrf-cookie {
+-        include fastcgi_params;
+-        fastcgi_param SCRIPT_FILENAME /var/www/html/public/index.php;
+-        fastcgi_param SCRIPT_NAME /index.php;
+-        fastcgi_param DOCUMENT_ROOT /var/www/html/public;
+-        fastcgi_param HTTP_X_FORWARDED_PROTO $scheme;
+-        fastcgi_param HTTP_X_FORWARDED_HOST $http_host;
+-        fastcgi_pass agcp_backend;
+-    }
+-
+-    location ^~ /passkeys/ {
+-        limit_req zone=agcp_api burst=20 nodelay;
+-        include fastcgi_params;
+-        fastcgi_param SCRIPT_FILENAME /var/www/html/public/index.php;
+-        fastcgi_param SCRIPT_NAME /index.php;
+-        fastcgi_param DOCUMENT_ROOT /var/www/html/public;
+-        fastcgi_param HTTP_X_FORWARDED_PROTO $scheme;
+-        fastcgi_param HTTP_X_FORWARDED_HOST $http_host;
+-        fastcgi_pass agcp_backend;
+-    }
+-
+-    location ^~ /user/passkeys {
+-        limit_req zone=agcp_api burst=20 nodelay;
+-        include fastcgi_params;
+-        fastcgi_param SCRIPT_FILENAME /var/www/html/public/index.php;
+-        fastcgi_param SCRIPT_NAME /index.php;
+-        fastcgi_param DOCUMENT_ROOT /var/www/html/public;
+-        fastcgi_param HTTP_X_FORWARDED_PROTO $scheme;
+-        fastcgi_param HTTP_X_FORWARDED_HOST $http_host;
+-        fastcgi_pass agcp_backend;
+-    }
+-
+-    location = /up {
+-        include fastcgi_params;
+-        fastcgi_param SCRIPT_FILENAME /var/www/html/public/index.php;
+-        fastcgi_param SCRIPT_NAME /index.php;
+-        fastcgi_param DOCUMENT_ROOT /var/www/html/public;
+-        fastcgi_pass agcp_backend;
+-        access_log off;
+-    }
+-
+-    location / {
+-        proxy_http_version 1.1;
+-        proxy_set_header Host $http_host;
+-        proxy_set_header X-Real-IP $remote_addr;
+-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+-        proxy_set_header X-Forwarded-Proto $scheme;
+-        proxy_set_header X-Request-ID $request_id;
+-        proxy_set_header Upgrade $http_upgrade;
+-        proxy_set_header Connection $connection_upgrade;
+-        proxy_cache_bypass $http_upgrade;
+-        proxy_read_timeout 86400;
+-        proxy_send_timeout 86400;
+-        proxy_pass http://agcp_frontend;
+-    }
+-
+-    add_header X-Content-Type-Options "nosniff" always;
+-    add_header X-Frame-Options "DENY" always;
+-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+-    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+-}
+-'@
+-
+-$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+-[System.IO.File]::WriteAllText($nginxPath, $nginx, $utf8NoBom)
+-
+-$dev = [System.IO.File]::ReadAllText($devComposePath)
+-$old = 'command: ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]'
+-$new = 'command: ["npm", "run", "dev", "--", "--hostname", "0.0.0.0", "--webpack"]'
+-if ($dev.Contains($old)) {
+-    $dev = $dev.Replace($old, $new)
+-    [System.IO.File]::WriteAllText($devComposePath, $dev, $utf8NoBom)
+-}
+-
+-$compose = @('-f', 'docker-compose.yml', '-f', 'docker-compose.dev.yml')
+-
+-Write-Host 'Clearing stale Next.js build cache...' -ForegroundColor Cyan
+-try {
+-    & docker compose @compose exec frontend sh -lc 'rm -rf /app/.next/*'
+-} catch {
+-    Write-Warning 'Frontend cache could not be cleared through the existing container; recreation will continue.'
+-}
+-
+-Write-Host 'Rebuilding and recreating frontend and nginx...' -ForegroundColor Cyan
+-& docker compose @compose up -d --build --force-recreate frontend nginx
+-if ($LASTEXITCODE -ne 0) { throw 'Docker rebuild failed.' }
+-
+-Write-Host ''
+-Write-Host 'Frontend hydration hotfix applied.' -ForegroundColor Green
+-Write-Host 'Open http://localhost:8080/login in a new Incognito window after 20-30 seconds.'
+-Write-Host 'Do not use 127.0.0.1 for this test.'
+-Write-Host ''
+-& docker compose @compose ps frontend nginx
+diff --git a/fix-agcp-phase13-15-powershell-encoding.ps1 b/fix-agcp-phase13-15-powershell-encoding.ps1
+deleted file mode 100644
+index 2b4fcd0..0000000
+--- a/fix-agcp-phase13-15-powershell-encoding.ps1
++++ /dev/null
+@@ -1,25 +0,0 @@
+-﻿$ErrorActionPreference = "Stop"
+-Set-StrictMode -Version Latest
+-
+-$ProjectRoot = "C:\Projects\agcp"
+-Set-Location $ProjectRoot
+-
+-$Utf8Bom = New-Object System.Text.UTF8Encoding($true)
+-
+-Get-ChildItem -Path ".\scripts" -Filter "*.ps1" -Recurse | ForEach-Object {
+-    $Path = $_.FullName
+-    $Text = [System.IO.File]::ReadAllText($Path, [System.Text.Encoding]::UTF8)
+-
+-    $Text = $Text.Replace([char]0x2013, "-")
+-    $Text = $Text.Replace([char]0x2014, "-")
+-    $Text = $Text.Replace([char]0x2018, "'")
+-    $Text = $Text.Replace([char]0x2019, "'")
+-    $Text = $Text.Replace([char]0x201C, '"')
+-    $Text = $Text.Replace([char]0x201D, '"')
+-
+-    [System.IO.File]::WriteAllText($Path, $Text, $Utf8Bom)
+-    Write-Host "Fixed: $Path" -ForegroundColor Green
+-}
+-
+-Write-Host "PowerShell encoding repair completed." -ForegroundColor Cyan
+-Write-Host "Now run: .\scripts\upgrade-phase13-15.ps1" -ForegroundColor Yellow
+diff --git a/fix-agcp-phase14-admin-token-and-readiness.ps1 b/fix-agcp-phase14-admin-token-and-readiness.ps1
+deleted file mode 100644
+index c8928a0..0000000
+--- a/fix-agcp-phase14-admin-token-and-readiness.ps1
++++ /dev/null
+@@ -1,187 +0,0 @@
+-﻿$ErrorActionPreference = "Stop"
+-Set-StrictMode -Version Latest
+-
+-$ProjectRoot = "C:\Projects\agcp"
+-Set-Location $ProjectRoot
+-
+-$MiddlewarePath = Join-Path $ProjectRoot "apps\backend\app\Modules\Identity\Http\Middleware\EnsureAdminTwoFactor.php"
+-$TestPath = Join-Path $ProjectRoot "apps\backend\tests\Feature\IdentityAccessTest.php"
+-$Phase15Path = Join-Path $ProjectRoot "scripts\verify-phase15.ps1"
+-$Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+-$Utf8Bom = New-Object System.Text.UTF8Encoding($true)
+-
+-foreach ($Path in @($MiddlewarePath, $TestPath, $Phase15Path)) {
+-    if (-not (Test-Path $Path)) {
+-        throw "Required file was not found: $Path"
+-    }
+-    Copy-Item $Path "$Path.phase14-hotfix-backup-$Stamp" -Force
+-}
+-
+-$Middleware = @'
+-<?php
+-
+-namespace Modules\Identity\Http\Middleware;
+-
+-use Closure;
+-use Illuminate\Http\Request;
+-use Symfony\Component\HttpFoundation\Response;
+-
+-class EnsureAdminTwoFactor
+-{
+-    public function handle(Request $request, Closure $next): Response
+-    {
+-        $user = $request->user();
+-
+-        if ($user === null) {
+-            abort(401, 'Unauthenticated.');
+-        }
+-
+-        /*
+-         * Administrative APIs are browser-session only.
+-         * A real Authorization: Bearer header is programmatic token access.
+-         * Sanctum SPA cookie authentication does not send a bearer header.
+-         */
+-        if ($request->bearerToken() !== null) {
+-            return response()->json([
+-                'message' => 'Administrative access requires an interactive browser session.',
+-                'code' => 'ADMIN_BROWSER_SESSION_REQUIRED',
+-            ], 403);
+-        }
+-
+-        if ($user->two_factor_confirmed_at === null) {
+-            return response()->json([
+-                'message' => 'Two-factor authentication is required for administrative access.',
+-                'code' => 'ADMIN_TWO_FACTOR_REQUIRED',
+-            ], 403);
+-        }
+-
+-        return $next($request);
+-    }
+-}
+-'@
+-
+-[System.IO.File]::WriteAllText($MiddlewarePath, $Middleware, $Utf8Bom)
+-
+-$TestText = [System.IO.File]::ReadAllText($TestPath, [System.Text.Encoding]::UTF8)
+-$TestText = $TestText.Replace("use Laravel\Sanctum\Sanctum;`r`n", "")
+-$TestText = $TestText.Replace("use Laravel\Sanctum\Sanctum;`n", "")
+-
+-$Replacement = @'
+-it('rejects bearer-token access to interactive administration', function (): void {
+-    $tenant = identityTenant();
+-    $adminAccess = identityPermission('identity.admin.access');
+-    $role = identityRole($tenant, 'tenant-admin', [$adminAccess], true);
+-    $admin = identityUser($tenant, ['two_factor_confirmed_at' => now()]);
+-    $admin->roles()->attach($role);
+-
+-    $plainTextToken = $admin
+-        ->createToken('identity-admin-test', ['identity.admin.access'])
+-        ->plainTextToken;
+-
+-    $this->withToken($plainTextToken)
+-        ->getJson('/api/v1/admin/users')
+-        ->assertForbidden()
+-        ->assertJsonPath('code', 'ADMIN_BROWSER_SESSION_REQUIRED');
+-});
+-'@
+-
+-$Pattern = "(?s)it\('rejects bearer-token access to interactive administration'.*\z"
+-if (-not [regex]::IsMatch($TestText, $Pattern)) {
+-    throw "The bearer-token test block was not found in IdentityAccessTest.php."
+-}
+-
+-$TestText = [regex]::Replace($TestText, $Pattern, $Replacement)
+-[System.IO.File]::WriteAllText($TestPath, $TestText, $Utf8Bom)
+-
+-$Phase15 = @'
+-$ErrorActionPreference = "Stop"
+-Set-StrictMode -Version Latest
+-Set-Location (Resolve-Path (Join-Path $PSScriptRoot ".."))
+-
+-$required = @(
+-    "VERSION",
+-    "CHANGELOG.md",
+-    "docs\PHASE_13_PRODUCTION_DEPLOYMENT.md",
+-    "docs\PHASE_14_SECURITY_PERFORMANCE_UAT.md",
+-    "docs\PHASE_15_LAUNCH_AND_HANDOVER.md",
+-    "docs\OPERATIONS_RUNBOOK.md",
+-    "docs\DISASTER_RECOVERY_RUNBOOK.md",
+-    "docs\ADMIN_OPERATIONS_GUIDE.md"
+-)
+-
+-foreach ($path in $required) {
+-    if (-not (Test-Path $path)) {
+-        throw "Required handover file is missing: $path"
+-    }
+-}
+-
+-$compose = @("-f", "docker-compose.yml", "-f", "docker-compose.dev.yml")
+-
+-& docker compose @compose restart backend nginx
+-if ($LASTEXITCODE -ne 0) {
+-    throw "Backend and Nginx restart failed."
+-}
+-
+-Start-Sleep -Seconds 12
+-
+-& docker compose @compose exec -T backend php artisan reliability:heartbeat scheduler
+-if ($LASTEXITCODE -ne 0) {
+-    Write-Host "Heartbeat refresh did not run; readiness retries will continue." -ForegroundColor Yellow
+-}
+-
+-$ready = $null
+-$lastError = $null
+-
+-for ($attempt = 1; $attempt -le 30; $attempt++) {
+-    try {
+-        $candidate = Invoke-RestMethod -Uri "http://localhost:8080/api/v1/health/ready" -TimeoutSec 20
+-        if ($candidate.status -eq "passed") {
+-            $ready = $candidate
+-            break
+-        }
+-        $lastError = "Readiness returned status: $($candidate.status)"
+-    } catch {
+-        $lastError = $_.Exception.Message
+-    }
+-
+-    Start-Sleep -Seconds 3
+-}
+-
+-if ($null -eq $ready) {
+-    & docker compose @compose ps
+-    & docker compose @compose logs --tail=120 backend nginx
+-    throw "Final readiness endpoint did not pass. Last error: $lastError"
+-}
+-
+-$version = (Get-Content "VERSION" -Raw).Trim()
+-if ($version -eq "") {
+-    throw "VERSION is empty."
+-}
+-
+-Write-Host "Phase 15 verification passed for release $version." -ForegroundColor Green
+-'@
+-
+-[System.IO.File]::WriteAllText($Phase15Path, $Phase15, $Utf8Bom)
+-
+-Write-Host "Checking PHP syntax..." -ForegroundColor Cyan
+-& docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend php -l app/Modules/Identity/Http/Middleware/EnsureAdminTwoFactor.php
+-if ($LASTEXITCODE -ne 0) {
+-    throw "Middleware PHP syntax check failed."
+-}
+-
+-Write-Host "Restarting backend and Nginx..." -ForegroundColor Cyan
+-& docker compose -f docker-compose.yml -f docker-compose.dev.yml restart backend nginx
+-if ($LASTEXITCODE -ne 0) {
+-    throw "Container restart failed."
+-}
+-
+-Start-Sleep -Seconds 15
+-
+-Write-Host "Running the Identity access test file..." -ForegroundColor Cyan
+-& docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend php artisan test tests/Feature/IdentityAccessTest.php
+-if ($LASTEXITCODE -ne 0) {
+-    throw "IdentityAccessTest.php still has a failure."
+-}
+-
+-Write-Host "Hotfix completed. Run Phase 14 verification next." -ForegroundColor Green
+-Write-Host ".\scripts\verify-phase14.ps1" -ForegroundColor Yellow
+diff --git a/fix-agcp-phase14-frontend-lint-v5.ps1 b/fix-agcp-phase14-frontend-lint-v5.ps1
+deleted file mode 100644
+index e15aeea..0000000
+--- a/fix-agcp-phase14-frontend-lint-v5.ps1
++++ /dev/null
+@@ -1,92 +0,0 @@
+-﻿$ErrorActionPreference = "Stop"
+-Set-StrictMode -Version Latest
+-
+-$ProjectRoot = "C:\Projects\agcp"
+-Set-Location $ProjectRoot
+-
+-$ConfigPath = Join-Path $ProjectRoot "apps\web\eslint.config.mjs"
+-if (-not (Test-Path $ConfigPath)) {
+-    throw "ESLint config was not found: $ConfigPath"
+-}
+-
+-$Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+-Copy-Item $ConfigPath "$ConfigPath.phase14-lint-backup-$Stamp" -Force
+-
+-$Config = @'
+-import { defineConfig, globalIgnores } from "eslint/config";
+-import nextVitals from "eslint-config-next/core-web-vitals";
+-import nextTs from "eslint-config-next/typescript";
+-
+-const legacyClientPageCompatibility = {
+-  name: "agcp/legacy-client-page-compatibility",
+-  files: ["app/**/*.tsx"],
+-  rules: {
+-    "react-hooks/set-state-in-effect": "off",
+-    "react-hooks/immutability": "off",
+-    "react-hooks/exhaustive-deps": "off",
+-    "@typescript-eslint/no-explicit-any": "off",
+-    "@typescript-eslint/no-unused-expressions": "off",
+-  },
+-};
+-
+-const legacyApiClientCompatibility = {
+-  name: "agcp/legacy-api-client-compatibility",
+-  files: ["lib/**/*.ts"],
+-  rules: {
+-    "@typescript-eslint/no-explicit-any": "off",
+-  },
+-};
+-
+-const postcssCompatibility = {
+-  name: "agcp/postcss-compatibility",
+-  files: ["postcss.config.mjs"],
+-  rules: {
+-    "import/no-anonymous-default-export": "off",
+-  },
+-};
+-
+-export default defineConfig([
+-  ...nextVitals,
+-  ...nextTs,
+-  legacyClientPageCompatibility,
+-  legacyApiClientCompatibility,
+-  postcssCompatibility,
+-  globalIgnores([".next/**", "out/**", "next-env.d.ts"]),
+-]);
+-'@
+-
+-$Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+-[System.IO.File]::WriteAllText($ConfigPath, $Config, $Utf8NoBom)
+-
+-Write-Host "Frontend ESLint compatibility config installed." -ForegroundColor Green
+-
+-$Compose = @("-f", "docker-compose.yml", "-f", "docker-compose.dev.yml")
+-
+-Write-Host "Starting frontend service..." -ForegroundColor Cyan
+-& docker compose @Compose up -d frontend
+-if ($LASTEXITCODE -ne 0) {
+-    throw "Frontend service could not be started."
+-}
+-
+-Start-Sleep -Seconds 10
+-
+-Write-Host "Checking ESLint configuration syntax..." -ForegroundColor Cyan
+-& docker compose @Compose exec -T frontend node --check eslint.config.mjs
+-if ($LASTEXITCODE -ne 0) {
+-    throw "eslint.config.mjs syntax check failed."
+-}
+-
+-Write-Host "Running frontend lint..." -ForegroundColor Cyan
+-& docker compose @Compose exec -T frontend npm run lint
+-if ($LASTEXITCODE -ne 0) {
+-    throw "Frontend lint still failed."
+-}
+-
+-Write-Host "Running frontend typecheck..." -ForegroundColor Cyan
+-& docker compose @Compose exec -T frontend npm run typecheck
+-if ($LASTEXITCODE -ne 0) {
+-    throw "Frontend typecheck failed."
+-}
+-
+-Write-Host "Phase 14 frontend lint hotfix V5 completed." -ForegroundColor Green
+-Write-Host "Next command: .\scripts\verify-phase14.ps1" -ForegroundColor Yellow
+diff --git a/fix-agcp-phase14-identity-test-helper-v3.ps1 b/fix-agcp-phase14-identity-test-helper-v3.ps1
+deleted file mode 100644
+index e3169c2..0000000
+--- a/fix-agcp-phase14-identity-test-helper-v3.ps1
++++ /dev/null
+@@ -1,107 +0,0 @@
+-﻿$ErrorActionPreference = "Stop"
+-Set-StrictMode -Version Latest
+-
+-$ProjectRoot = "C:\Projects\agcp"
+-Set-Location $ProjectRoot
+-
+-$TestPath = Join-Path $ProjectRoot "apps\backend\tests\Feature\IdentityAccessTest.php"
+-$Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+-$Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+-
+-if (-not (Test-Path $TestPath)) {
+-    throw "IdentityAccessTest.php was not found: $TestPath"
+-}
+-
+-Copy-Item $TestPath "$TestPath.phase14-v3-backup-$Stamp" -Force
+-
+-$Text = [System.IO.File]::ReadAllText($TestPath, [System.Text.Encoding]::UTF8)
+-
+-$NewHelper = @'
+-function identityUser(Tenant $tenant, array $attributes = []): User
+-{
+-    /*
+-     * email_verified_at and two_factor_confirmed_at are intentionally not
+-     * mass assignable on the production User model. Persist them explicitly
+-     * in this test factory so verified and 2FA scenarios are represented.
+-     */
+-    $emailVerifiedAt = array_key_exists('email_verified_at', $attributes)
+-        ? $attributes['email_verified_at']
+-        : now();
+-
+-    $twoFactorConfirmedAt = array_key_exists('two_factor_confirmed_at', $attributes)
+-        ? $attributes['two_factor_confirmed_at']
+-        : null;
+-
+-    unset($attributes['email_verified_at'], $attributes['two_factor_confirmed_at']);
+-
+-    $user = User::query()->create(array_merge([
+-        'name' => 'Identity User',
+-        'email' => fake()->unique()->safeEmail(),
+-        'password' => 'Correct-Horse-Battery-Staple!42',
+-        'status' => 'active',
+-        'locale' => 'en',
+-        'timezone' => 'UTC',
+-    ], $attributes));
+-
+-    $user->forceFill([
+-        'email_verified_at' => $emailVerifiedAt,
+-        'two_factor_confirmed_at' => $twoFactorConfirmedAt,
+-    ])->save();
+-
+-    TenantMembership::query()->create([
+-        'tenant_id' => $tenant->id,
+-        'user_id' => $user->id,
+-        'status' => 'active',
+-        'joined_at' => now(),
+-    ]);
+-
+-    return $user->refresh();
+-}
+-'@
+-
+-$Pattern = "(?s)function identityUser\(Tenant \$tenant, array \$attributes = \[\]\): User\s*\{.*?\r?\n\}\r?\n\r?\nit\('registers a customer inside the resolved tenant'"
+-if (-not [regex]::IsMatch($Text, $Pattern)) {
+-    throw "The identityUser test helper block was not found."
+-}
+-
+-$Replacement = $NewHelper + "`r`n`r`nit('registers a customer inside the resolved tenant'"
+-$Text = [regex]::Replace($Text, $Pattern, $Replacement, 1)
+-
+-[System.IO.File]::WriteAllText($TestPath, $Text, $Utf8NoBom)
+-
+-Write-Host "Checking PHP syntax..." -ForegroundColor Cyan
+-& docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend php -l tests/Feature/IdentityAccessTest.php
+-if ($LASTEXITCODE -ne 0) {
+-    throw "IdentityAccessTest.php syntax check failed."
+-}
+-
+-Write-Host "Running isolated IdentityAccessTest..." -ForegroundColor Cyan
+-& docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T `
+-    -e APP_ENV=testing `
+-    -e DB_CONNECTION=sqlite `
+-    -e "DB_DATABASE=:memory:" `
+-    -e CACHE_STORE=array `
+-    -e SESSION_DRIVER=array `
+-    -e QUEUE_CONNECTION=sync `
+-    -e MAIL_MAILER=array `
+-    backend php artisan test tests/Feature/IdentityAccessTest.php
+-
+-if ($LASTEXITCODE -ne 0) {
+-    throw "IdentityAccessTest still failed."
+-}
+-
+-Write-Host "Clearing development cache and restarting backend..." -ForegroundColor Cyan
+-& docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend php artisan optimize:clear
+-if ($LASTEXITCODE -ne 0) {
+-    throw "Development cache clear failed."
+-}
+-
+-& docker compose -f docker-compose.yml -f docker-compose.dev.yml restart backend nginx
+-if ($LASTEXITCODE -ne 0) {
+-    throw "Backend/Nginx restart failed."
+-}
+-
+-Start-Sleep -Seconds 15
+-
+-Write-Host "Phase 14 identity test hotfix V3 completed." -ForegroundColor Green
+-Write-Host "Next: .\scripts\verify-phase14.ps1" -ForegroundColor Yellow
+diff --git a/fix-agcp-phase14-identity-test-helper-v4.ps1 b/fix-agcp-phase14-identity-test-helper-v4.ps1
+deleted file mode 100644
+index 8f15536..0000000
+--- a/fix-agcp-phase14-identity-test-helper-v4.ps1
++++ /dev/null
+@@ -1,97 +0,0 @@
+-﻿$ErrorActionPreference = "Stop"
+-Set-StrictMode -Version Latest
+-
+-$ProjectRoot = "C:\Projects\agcp"
+-Set-Location $ProjectRoot
+-
+-$TestPath = Join-Path $ProjectRoot "apps\backend\tests\Feature\IdentityAccessTest.php"
+-$Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+-$Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+-
+-if (-not (Test-Path $TestPath)) {
+-    throw "IdentityAccessTest.php was not found: $TestPath"
+-}
+-
+-Copy-Item $TestPath "$TestPath.phase14-v4-backup-$Stamp" -Force
+-$Text = [System.IO.File]::ReadAllText($TestPath, [System.Text.Encoding]::UTF8)
+-
+-if ($Text.Contains("'two_factor_confirmed_at' => `$twoFactorConfirmedAt") -and $Text.Contains("return `$user->refresh();")) {
+-    Write-Host "Identity test helper is already fixed." -ForegroundColor Green
+-} else {
+-    $NewHelper = @'
+-function identityUser(Tenant $tenant, array $attributes = []): User
+-{
+-    // These security timestamps are intentionally not mass assignable.
+-    $emailVerifiedAt = array_key_exists('email_verified_at', $attributes)
+-        ? $attributes['email_verified_at']
+-        : now();
+-
+-    $twoFactorConfirmedAt = array_key_exists('two_factor_confirmed_at', $attributes)
+-        ? $attributes['two_factor_confirmed_at']
+-        : null;
+-
+-    unset($attributes['email_verified_at'], $attributes['two_factor_confirmed_at']);
+-
+-    $user = User::query()->create(array_merge([
+-        'name' => 'Identity User',
+-        'email' => fake()->unique()->safeEmail(),
+-        'password' => 'Correct-Horse-Battery-Staple!42',
+-        'status' => 'active',
+-        'locale' => 'en',
+-        'timezone' => 'UTC',
+-    ], $attributes));
+-
+-    $user->forceFill([
+-        'email_verified_at' => $emailVerifiedAt,
+-        'two_factor_confirmed_at' => $twoFactorConfirmedAt,
+-    ])->save();
+-
+-    TenantMembership::query()->create([
+-        'tenant_id' => $tenant->id,
+-        'user_id' => $user->id,
+-        'status' => 'active',
+-        'joined_at' => now(),
+-    ]);
+-
+-    return $user->refresh();
+-}
+-'@
+-
+-    # Single-quoted pattern is required so PowerShell does not expand PHP variables.
+-    $Pattern = '(?s)function identityUser\(Tenant \$tenant, array \$attributes = \[\]\): User\s*\{.*?\r?\n\}\r?\n(?=\r?\nit\(''registers a customer inside the resolved tenant'')'
+-
+-    if (-not [regex]::IsMatch($Text, $Pattern)) {
+-        throw "The identityUser helper block was not found. No file was changed."
+-    }
+-
+-    $Text = [regex]::Replace($Text, $Pattern, $NewHelper + "`r`n", 1)
+-    [System.IO.File]::WriteAllText($TestPath, $Text, $Utf8NoBom)
+-    Write-Host "Identity test helper patched." -ForegroundColor Green
+-}
+-
+-Write-Host "Checking PHP syntax..." -ForegroundColor Cyan
+-& docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend php -l tests/Feature/IdentityAccessTest.php
+-if ($LASTEXITCODE -ne 0) {
+-    throw "IdentityAccessTest.php syntax check failed."
+-}
+-
+-Write-Host "Running isolated IdentityAccessTest..." -ForegroundColor Cyan
+-& docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T `
+-    -e APP_ENV=testing `
+-    -e DB_CONNECTION=sqlite `
+-    -e "DB_DATABASE=:memory:" `
+-    -e CACHE_STORE=array `
+-    -e SESSION_DRIVER=array `
+-    -e QUEUE_CONNECTION=sync `
+-    -e MAIL_MAILER=array `
+-    backend php artisan test tests/Feature/IdentityAccessTest.php
+-
+-if ($LASTEXITCODE -ne 0) {
+-    throw "IdentityAccessTest still failed."
+-}
+-
+-& docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend php artisan optimize:clear
+-& docker compose -f docker-compose.yml -f docker-compose.dev.yml restart backend nginx
+-
+-Write-Host "Phase 14 identity fix V4 completed." -ForegroundColor Green
+-Write-Host "Next: .\scripts\verify-phase14.ps1" -ForegroundColor Yellow
+diff --git a/fix-agcp-phase14-liveness-v6.ps1 b/fix-agcp-phase14-liveness-v6.ps1
+deleted file mode 100644
+index d983d5e..0000000
+--- a/fix-agcp-phase14-liveness-v6.ps1
++++ /dev/null
+@@ -1,147 +0,0 @@
+-﻿$ErrorActionPreference = "Stop"
+-Set-StrictMode -Version Latest
+-
+-$ProjectRoot = "C:\Projects\agcp"
+-Set-Location $ProjectRoot
+-
+-$VerifyPath = Join-Path $ProjectRoot "scripts\verify-phase14.ps1"
+-if (-not (Test-Path $VerifyPath)) {
+-    throw "verify-phase14.ps1 was not found: $VerifyPath"
+-}
+-
+-$Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+-Copy-Item $VerifyPath "$VerifyPath.phase14-liveness-backup-$Stamp" -Force
+-
+-$Verify = @'
+-$ErrorActionPreference = "Stop"
+-Set-StrictMode -Version Latest
+-Set-Location (Resolve-Path (Join-Path $PSScriptRoot ".."))
+-
+-& ".\scripts\security-audit.ps1" -EnvironmentFile ".env"
+-
+-$compose = @("-f", "docker-compose.yml", "-f", "docker-compose.dev.yml")
+-$testExec = @(
+-    "exec", "-T",
+-    "-e", "APP_ENV=testing",
+-    "-e", "DB_CONNECTION=sqlite",
+-    "-e", "DB_DATABASE=:memory:",
+-    "-e", "CACHE_STORE=array",
+-    "-e", "SESSION_DRIVER=array",
+-    "-e", "QUEUE_CONNECTION=sync",
+-    "-e", "MAIL_MAILER=array",
+-    "backend"
+-)
+-
+-& docker compose @compose @testExec php artisan config:clear
+-if ($LASTEXITCODE -ne 0) { throw "Testing config clear failed." }
+-
+-& docker compose @compose @testExec php artisan test
+-if ($LASTEXITCODE -ne 0) { throw "Backend regression suite failed." }
+-
+-# Restore the long-running development PHP-FPM process after isolated tests.
+-& docker compose @compose exec -T backend php artisan optimize:clear
+-if ($LASTEXITCODE -ne 0) { throw "Development cache restore failed." }
+-
+-& docker compose @compose restart backend nginx
+-if ($LASTEXITCODE -ne 0) { throw "Backend/Nginx restart failed after tests." }
+-
+-$live = $false
+-$lastError = $null
+-
+-for ($attempt = 1; $attempt -le 30; $attempt++) {
+-    Start-Sleep -Seconds 3
+-
+-    try {
+-        $response = Invoke-WebRequest `
+-            "http://localhost:8080/api/v1/health/live" `
+-            -UseBasicParsing `
+-            -Headers @{Accept="application/json"} `
+-            -TimeoutSec 20
+-
+-        if ([int]$response.StatusCode -eq 200) {
+-            $live = $true
+-            break
+-        }
+-
+-        $lastError = "HTTP $([int]$response.StatusCode)"
+-    } catch {
+-        $lastError = $_.Exception.Message
+-    }
+-}
+-
+-if (-not $live) {
+-    & docker compose @compose ps
+-    & docker compose @compose logs --tail=150 backend nginx
+-    & docker compose @compose exec -T backend sh -lc "tail -n 150 storage/logs/laravel.log 2>/dev/null || true"
+-    throw "Liveness did not recover after the test environment. Last error: $lastError"
+-}
+-
+-& docker compose @compose exec -T backend php artisan reliability:heartbeat scheduler
+-if ($LASTEXITCODE -ne 0) {
+-    throw "Scheduler heartbeat refresh failed."
+-}
+-
+-& docker compose @compose exec -T frontend npm run lint
+-if ($LASTEXITCODE -ne 0) { throw "Frontend lint failed." }
+-
+-& docker compose @compose exec -T frontend npm run typecheck
+-if ($LASTEXITCODE -ne 0) { throw "Frontend typecheck failed." }
+-
+-& ".\scripts\uat-smoke.ps1"
+-& ".\scripts\load-smoke.ps1" -Requests 30
+-
+-Write-Host "Phase 14 verification passed." -ForegroundColor Green
+-'@
+-
+-$Utf8Bom = New-Object System.Text.UTF8Encoding($true)
+-[System.IO.File]::WriteAllText($VerifyPath, $Verify, $Utf8Bom)
+-
+-$compose = @("-f", "docker-compose.yml", "-f", "docker-compose.dev.yml")
+-
+-Write-Host "Restoring development Laravel runtime..." -ForegroundColor Cyan
+-& docker compose @compose up -d backend nginx
+-if ($LASTEXITCODE -ne 0) { throw "Backend/Nginx could not be started." }
+-
+-& docker compose @compose exec -T backend php artisan optimize:clear
+-if ($LASTEXITCODE -ne 0) { throw "Laravel cache clear failed." }
+-
+-& docker compose @compose restart backend nginx
+-if ($LASTEXITCODE -ne 0) { throw "Backend/Nginx restart failed." }
+-
+-$live = $false
+-$lastError = $null
+-
+-for ($attempt = 1; $attempt -le 30; $attempt++) {
+-    Start-Sleep -Seconds 3
+-
+-    try {
+-        $response = Invoke-WebRequest `
+-            "http://localhost:8080/api/v1/health/live" `
+-            -UseBasicParsing `
+-            -Headers @{Accept="application/json"} `
+-            -TimeoutSec 20
+-
+-        if ([int]$response.StatusCode -eq 200) {
+-            $live = $true
+-            Write-Host "Liveness recovered - HTTP 200." -ForegroundColor Green
+-            break
+-        }
+-
+-        $lastError = "HTTP $([int]$response.StatusCode)"
+-    } catch {
+-        $lastError = $_.Exception.Message
+-    }
+-}
+-
+-if (-not $live) {
+-    & docker compose @compose ps
+-    & docker compose @compose logs --tail=150 backend nginx
+-    & docker compose @compose exec -T backend sh -lc "tail -n 150 storage/logs/laravel.log 2>/dev/null || true"
+-    throw "Liveness is still failing. Last error: $lastError"
+-}
+-
+-& docker compose @compose exec -T backend php artisan reliability:heartbeat scheduler
+-if ($LASTEXITCODE -ne 0) { throw "Scheduler heartbeat refresh failed." }
+-
+-Write-Host "Phase 14 liveness recovery V6 completed." -ForegroundColor Green
+-Write-Host "Next command: .\scripts\verify-phase14.ps1" -ForegroundColor Yellow
+diff --git a/fix-agcp-phase14-test-isolation-v2.ps1 b/fix-agcp-phase14-test-isolation-v2.ps1
+deleted file mode 100644
+index 3b829ca..0000000
+--- a/fix-agcp-phase14-test-isolation-v2.ps1
++++ /dev/null
+@@ -1,282 +0,0 @@
+-﻿$ErrorActionPreference = "Stop"
+-Set-StrictMode -Version Latest
+-
+-$ProjectRoot = "C:\Projects\agcp"
+-Set-Location $ProjectRoot
+-
+-$MiddlewarePath = Join-Path $ProjectRoot "apps\backend\app\Modules\Identity\Http\Middleware\EnsureAdminTwoFactor.php"
+-$TestPath = Join-Path $ProjectRoot "apps\backend\tests\Feature\IdentityAccessTest.php"
+-$PhpunitPath = Join-Path $ProjectRoot "apps\backend\phpunit.xml"
+-$Verify14Path = Join-Path $ProjectRoot "scripts\verify-phase14.ps1"
+-$Verify15Path = Join-Path $ProjectRoot "scripts\verify-phase15.ps1"
+-$Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+-
+-$Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+-$Utf8Bom = New-Object System.Text.UTF8Encoding($true)
+-
+-foreach ($Path in @($MiddlewarePath, $TestPath, $PhpunitPath, $Verify14Path, $Verify15Path)) {
+-    if (-not (Test-Path $Path)) {
+-        throw "Required file was not found: $Path"
+-    }
+-    Copy-Item $Path "$Path.phase14-v2-backup-$Stamp" -Force
+-}
+-
+-# 1. Correct browser-session vs bearer-token detection.
+-$Middleware = @'
+-<?php
+-
+-namespace Modules\Identity\Http\Middleware;
+-
+-use Closure;
+-use Illuminate\Http\Request;
+-use Symfony\Component\HttpFoundation\Response;
+-
+-class EnsureAdminTwoFactor
+-{
+-    public function handle(Request $request, Closure $next): Response
+-    {
+-        $user = $request->user();
+-
+-        if ($user === null) {
+-            abort(401, 'Unauthenticated.');
+-        }
+-
+-        /*
+-         * Administrative APIs are browser-session only.
+-         * Sanctum SPA cookie authentication does not send an Authorization bearer header.
+-         */
+-        if ($request->bearerToken() !== null) {
+-            return response()->json([
+-                'message' => 'Administrative access requires an interactive browser session.',
+-                'code' => 'ADMIN_BROWSER_SESSION_REQUIRED',
+-            ], 403);
+-        }
+-
+-        if ($user->two_factor_confirmed_at === null) {
+-            return response()->json([
+-                'message' => 'Two-factor authentication is required for administrative access.',
+-                'code' => 'ADMIN_TWO_FACTOR_REQUIRED',
+-            ], 403);
+-        }
+-
+-        return $next($request);
+-    }
+-}
+-'@
+-[System.IO.File]::WriteAllText($MiddlewarePath, $Middleware, $Utf8NoBom)
+-
+-# 2. Make the bearer-token test send a real Authorization header.
+-$TestText = [System.IO.File]::ReadAllText($TestPath, [System.Text.Encoding]::UTF8)
+-$TestText = $TestText.Replace("use Laravel\Sanctum\Sanctum;`r`n", "")
+-$TestText = $TestText.Replace("use Laravel\Sanctum\Sanctum;`n", "")
+-
+-$BearerTest = @'
+-it('rejects bearer-token access to interactive administration', function (): void {
+-    $tenant = identityTenant();
+-    $adminAccess = identityPermission('identity.admin.access');
+-    $role = identityRole($tenant, 'tenant-admin', [$adminAccess], true);
+-    $admin = identityUser($tenant, ['two_factor_confirmed_at' => now()]);
+-    $admin->roles()->attach($role);
+-
+-    $plainTextToken = $admin
+-        ->createToken('identity-admin-test', ['identity.admin.access'])
+-        ->plainTextToken;
+-
+-    $this->withToken($plainTextToken)
+-        ->getJson('/api/v1/admin/users')
+-        ->assertForbidden()
+-        ->assertJsonPath('code', 'ADMIN_BROWSER_SESSION_REQUIRED');
+-});
+-'@
+-
+-$Pattern = "(?s)it\('rejects bearer-token access to interactive administration'.*\z"
+-if (-not [regex]::IsMatch($TestText, $Pattern)) {
+-    throw "Bearer-token test block was not found."
+-}
+-$TestText = [regex]::Replace($TestText, $Pattern, $BearerTest)
+-[System.IO.File]::WriteAllText($TestPath, $TestText, $Utf8NoBom)
+-
+-# 3. Force PHPUnit to use testing + SQLite even when Docker injects local .env variables.
+-[xml]$Phpunit = Get-Content $PhpunitPath -Raw
+-
+-$RequiredEnv = @{
+-    APP_ENV = "testing"
+-    APP_KEY = "base64:MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
+-    CACHE_STORE = "array"
+-    DB_CONNECTION = "sqlite"
+-    DB_DATABASE = ":memory:"
+-    QUEUE_CONNECTION = "sync"
+-    SESSION_DRIVER = "array"
+-    MAIL_MAILER = "array"
+-}
+-
+-$PhpNode = $Phpunit.phpunit.php
+-foreach ($Name in $RequiredEnv.Keys) {
+-    $Node = @($PhpNode.env | Where-Object { $_.name -eq $Name }) | Select-Object -First 1
+-
+-    if ($null -eq $Node) {
+-        $Node = $Phpunit.CreateElement("env")
+-        $Node.SetAttribute("name", $Name)
+-        [void]$PhpNode.AppendChild($Node)
+-    }
+-
+-    $Node.SetAttribute("value", $RequiredEnv[$Name])
+-    $Node.SetAttribute("force", "true")
+-}
+-
+-foreach ($Node in @($PhpNode.env)) {
+-    $Node.SetAttribute("force", "true")
+-}
+-
+-$XmlSettings = New-Object System.Xml.XmlWriterSettings
+-$XmlSettings.Encoding = $Utf8NoBom
+-$XmlSettings.Indent = $true
+-$XmlSettings.OmitXmlDeclaration = $false
+-$Writer = [System.Xml.XmlWriter]::Create($PhpunitPath, $XmlSettings)
+-try {
+-    $Phpunit.Save($Writer)
+-} finally {
+-    $Writer.Dispose()
+-}
+-
+-# 4. Run Phase 14 backend tests with explicit isolated test variables.
+-$Verify14 = @'
+-$ErrorActionPreference = "Stop"
+-Set-StrictMode -Version Latest
+-Set-Location (Resolve-Path (Join-Path $PSScriptRoot ".."))
+-
+-& ".\scripts\security-audit.ps1" -EnvironmentFile ".env"
+-
+-$compose = @("-f", "docker-compose.yml", "-f", "docker-compose.dev.yml")
+-$testExec = @(
+-    "exec", "-T",
+-    "-e", "APP_ENV=testing",
+-    "-e", "DB_CONNECTION=sqlite",
+-    "-e", "DB_DATABASE=:memory:",
+-    "-e", "CACHE_STORE=array",
+-    "-e", "SESSION_DRIVER=array",
+-    "-e", "QUEUE_CONNECTION=sync",
+-    "-e", "MAIL_MAILER=array",
+-    "backend"
+-)
+-
+-& docker compose @compose @testExec php artisan config:clear
+-if ($LASTEXITCODE -ne 0) { throw "Testing config clear failed." }
+-
+-& docker compose @compose @testExec php artisan test
+-if ($LASTEXITCODE -ne 0) { throw "Backend regression suite failed." }
+-
+-& docker compose @compose exec -T backend php artisan optimize:clear
+-if ($LASTEXITCODE -ne 0) { throw "Development cache restore failed." }
+-
+-& docker compose @compose exec -T frontend npm run lint
+-if ($LASTEXITCODE -ne 0) { throw "Frontend lint failed." }
+-
+-& docker compose @compose exec -T frontend npm run typecheck
+-if ($LASTEXITCODE -ne 0) { throw "Frontend typecheck failed." }
+-
+-& ".\scripts\uat-smoke.ps1"
+-& ".\scripts\load-smoke.ps1" -Requests 30
+-
+-Write-Host "Phase 14 verification passed." -ForegroundColor Green
+-'@
+-[System.IO.File]::WriteAllText($Verify14Path, $Verify14, $Utf8Bom)
+-
+-# 5. Add startup retries to Phase 15 readiness.
+-$Verify15 = @'
+-$ErrorActionPreference = "Stop"
+-Set-StrictMode -Version Latest
+-Set-Location (Resolve-Path (Join-Path $PSScriptRoot ".."))
+-
+-$required = @(
+-    "VERSION",
+-    "CHANGELOG.md",
+-    "docs\PHASE_13_PRODUCTION_DEPLOYMENT.md",
+-    "docs\PHASE_14_SECURITY_PERFORMANCE_UAT.md",
+-    "docs\PHASE_15_LAUNCH_AND_HANDOVER.md",
+-    "docs\OPERATIONS_RUNBOOK.md",
+-    "docs\DISASTER_RECOVERY_RUNBOOK.md",
+-    "docs\ADMIN_OPERATIONS_GUIDE.md"
+-)
+-
+-foreach ($path in $required) {
+-    if (-not (Test-Path $path)) {
+-        throw "Required handover file is missing: $path"
+-    }
+-}
+-
+-$compose = @("-f", "docker-compose.yml", "-f", "docker-compose.dev.yml")
+-
+-& docker compose @compose restart backend nginx
+-if ($LASTEXITCODE -ne 0) {
+-    throw "Backend and Nginx restart failed."
+-}
+-
+-$ready = $null
+-$lastError = $null
+-
+-for ($attempt = 1; $attempt -le 30; $attempt++) {
+-    Start-Sleep -Seconds 3
+-
+-    try {
+-        & docker compose @compose exec -T backend php artisan reliability:heartbeat scheduler *> $null
+-        $candidate = Invoke-RestMethod -Uri "http://localhost:8080/api/v1/health/ready" -TimeoutSec 20
+-
+-        if ($candidate.status -eq "passed") {
+-            $ready = $candidate
+-            break
+-        }
+-
+-        $lastError = "Readiness returned status: $($candidate.status)"
+-    } catch {
+-        $lastError = $_.Exception.Message
+-    }
+-}
+-
+-if ($null -eq $ready) {
+-    & docker compose @compose ps
+-    & docker compose @compose logs --tail=120 backend nginx
+-    throw "Final readiness endpoint did not pass. Last error: $lastError"
+-}
+-
+-$version = (Get-Content "VERSION" -Raw).Trim()
+-if ($version -eq "") {
+-    throw "VERSION is empty."
+-}
+-
+-Write-Host "Phase 15 verification passed for release $version." -ForegroundColor Green
+-'@
+-[System.IO.File]::WriteAllText($Verify15Path, $Verify15, $Utf8Bom)
+-
+-Write-Host "Checking syntax..." -ForegroundColor Cyan
+-& docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend php -l app/Modules/Identity/Http/Middleware/EnsureAdminTwoFactor.php
+-if ($LASTEXITCODE -ne 0) { throw "Middleware syntax check failed." }
+-
+-& docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend php -l tests/Feature/IdentityAccessTest.php
+-if ($LASTEXITCODE -ne 0) { throw "Identity test syntax check failed." }
+-
+-Write-Host "Running isolated IdentityAccessTest..." -ForegroundColor Cyan
+-& docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T `
+-    -e APP_ENV=testing `
+-    -e DB_CONNECTION=sqlite `
+-    -e "DB_DATABASE=:memory:" `
+-    -e CACHE_STORE=array `
+-    -e SESSION_DRIVER=array `
+-    -e QUEUE_CONNECTION=sync `
+-    -e MAIL_MAILER=array `
+-    backend php artisan test tests/Feature/IdentityAccessTest.php
+-
+-if ($LASTEXITCODE -ne 0) {
+-    throw "IdentityAccessTest still failed."
+-}
+-
+-Write-Host "Restarting development backend and Nginx..." -ForegroundColor Cyan
+-& docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend php artisan optimize:clear
+-& docker compose -f docker-compose.yml -f docker-compose.dev.yml restart backend nginx
+-Start-Sleep -Seconds 15
+-
+-Write-Host "Current development database counts:" -ForegroundColor Cyan
+-& docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend php artisan tinker --execute="dump(['tenants'=>\Modules\Tenancy\Infrastructure\Models\Tenant::count(),'users'=>\App\Models\User::count()]);"
+-
+-Write-Host "Phase 14 test-isolation hotfix completed." -ForegroundColor Green
+-Write-Host "Next: .\scripts\verify-phase14.ps1" -ForegroundColor Yellow
+diff --git a/infrastructure/nginx/default.conf.backup-20260731-015326 b/infrastructure/nginx/default.conf.backup-20260731-015326
+deleted file mode 100644
+index 9837463..0000000
+--- a/infrastructure/nginx/default.conf.backup-20260731-015326
++++ /dev/null
+@@ -1,86 +0,0 @@
+-limit_req_zone $binary_remote_addr zone=agcp_api:10m rate=30r/s;
+-upstream agcp_frontend { server frontend:3000; keepalive 32; }
+-upstream agcp_backend { server backend:9000; keepalive 16; }
+-
+-server {
+-    listen 80 default_server;
+-    server_name _;
+-    server_tokens off;
+-    client_max_body_size 10m;
+-
+-    location = /nginx-health {
+-        access_log off;
+-        default_type text/plain;
+-        return 200 "ok\n";
+-    }
+-
+-    location ^~ /api/ {
+-        limit_req zone=agcp_api burst=60 nodelay;
+-        include fastcgi_params;
+-        fastcgi_param SCRIPT_FILENAME /var/www/html/public/index.php;
+-        fastcgi_param SCRIPT_NAME /index.php;
+-        fastcgi_param DOCUMENT_ROOT /var/www/html/public;
+-        fastcgi_param HTTP_PROXY "";
+-        fastcgi_param HTTP_X_FORWARDED_PROTO $scheme;
+-        fastcgi_param HTTP_X_FORWARDED_HOST $host;
+-        fastcgi_pass agcp_backend;
+-        fastcgi_read_timeout 120s;
+-        fastcgi_hide_header X-Powered-By;
+-    }
+-
+-    location = /sanctum/csrf-cookie {
+-        include fastcgi_params;
+-        fastcgi_param SCRIPT_FILENAME /var/www/html/public/index.php;
+-        fastcgi_param SCRIPT_NAME /index.php;
+-        fastcgi_param DOCUMENT_ROOT /var/www/html/public;
+-        fastcgi_param HTTP_X_FORWARDED_PROTO $scheme;
+-        fastcgi_param HTTP_X_FORWARDED_HOST $host;
+-        fastcgi_pass agcp_backend;
+-    }
+-
+-    location ^~ /passkeys/ {
+-        limit_req zone=agcp_api burst=20 nodelay;
+-        include fastcgi_params;
+-        fastcgi_param SCRIPT_FILENAME /var/www/html/public/index.php;
+-        fastcgi_param SCRIPT_NAME /index.php;
+-        fastcgi_param DOCUMENT_ROOT /var/www/html/public;
+-        fastcgi_param HTTP_X_FORWARDED_PROTO $scheme;
+-        fastcgi_param HTTP_X_FORWARDED_HOST $host;
+-        fastcgi_pass agcp_backend;
+-    }
+-
+-    location ^~ /user/passkeys {
+-        limit_req zone=agcp_api burst=20 nodelay;
+-        include fastcgi_params;
+-        fastcgi_param SCRIPT_FILENAME /var/www/html/public/index.php;
+-        fastcgi_param SCRIPT_NAME /index.php;
+-        fastcgi_param DOCUMENT_ROOT /var/www/html/public;
+-        fastcgi_param HTTP_X_FORWARDED_PROTO $scheme;
+-        fastcgi_param HTTP_X_FORWARDED_HOST $host;
+-        fastcgi_pass agcp_backend;
+-    }
+-
+-    location = /up {
+-        include fastcgi_params;
+-        fastcgi_param SCRIPT_FILENAME /var/www/html/public/index.php;
+-        fastcgi_param SCRIPT_NAME /index.php;
+-        fastcgi_param DOCUMENT_ROOT /var/www/html/public;
+-        fastcgi_pass agcp_backend;
+-        access_log off;
+-    }
+-
+-    location / {
+-        proxy_http_version 1.1;
+-        proxy_set_header Host $host;
+-        proxy_set_header X-Real-IP $remote_addr;
+-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+-        proxy_set_header X-Forwarded-Proto $scheme;
+-        proxy_set_header X-Request-ID $request_id;
+-        proxy_pass http://agcp_frontend;
+-    }
+-
+-    add_header X-Content-Type-Options "nosniff" always;
+-    add_header X-Frame-Options "DENY" always;
+-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+-    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+-}
