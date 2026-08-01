@@ -1,0 +1,1 @@
+* * * * * cd /home/agcp/agcp-2026-2027/apps/backend && /usr/bin/php artisan schedule:run >> /home/agcp/logs/agcp-staging-scheduler.log 2>&1
