@@ -3,7 +3,6 @@
 return [
     'version' => '2026-2027-master',
     'architecture' => 'modular-monolith-event-driven',
-
     'modules' => [
         'Platform',
         'Tenancy',
@@ -31,27 +30,6 @@ return [
         'Reporting',
         'Reliability',
     ],
-
-    'transactional_core' => [
-        'Tenancy',
-        'Identity',
-        'Wallet',
-        'Catalog',
-        'Inventory',
-        'Checkout',
-        'Orders',
-        'Supplier',
-        'Payments',
-    ],
-
-    'integration_patterns' => [
-        'supplier_provider_adapter',
-        'dhru_compatible_adapter',
-        'payment_provider_adapter',
-        'idempotency_key',
-        'transactional_outbox',
-    ],
-
     'principles' => [
         'tenant-aware',
         'least-privilege',
