@@ -16,8 +16,14 @@ final class Supplier extends Model
         'timeout_seconds',
         'max_retries',
         'credentials_encrypted',
+        'secret_payload',
         'settings',
         'last_healthcheck_at',
+    ];
+
+    protected $hidden = [
+        'credentials_encrypted',
+        'secret_payload',
     ];
 
     protected function casts(): array

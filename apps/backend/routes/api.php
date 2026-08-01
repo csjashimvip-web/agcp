@@ -7,6 +7,11 @@ use App\Modules\Platform\Http\Controllers\AdminOverviewController;
 use App\Modules\Platform\Http\Controllers\AdminResourceController;
 use App\Modules\Platform\Http\Controllers\PlatformController;
 use App\Modules\Tenancy\Http\Controllers\TenantController;
+use App\Modules\Catalog\Http\Controllers\AdminProductController;
+use App\Modules\Supplier\Http\Controllers\AdminSupplierController;
+use App\Modules\Supplier\Http\Controllers\AdminSupplierRoutingController;
+use App\Modules\Supplier\Http\Controllers\AdminSupplierSyncController;
+use App\Modules\Wallet\Http\Controllers\AdminDepositController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -42,6 +47,36 @@ Route::prefix('v1')->group(function (): void {
 
             Route::get('/suppliers', [AdminResourceController::class, 'suppliers'])
                 ->middleware('agcp.permission:supplier.manage');
+
+            Route::post('/products', [AdminProductController::class, 'store'])
+                ->middleware('agcp.permission:catalog.manage');
+            Route::patch('/products/{productId}', [AdminProductController::class, 'update'])
+                ->whereNumber('productId')
+                ->middleware('agcp.permission:catalog.manage');
+
+            Route::post('/suppliers', [AdminSupplierController::class, 'store'])
+                ->middleware('agcp.permission:supplier.manage');
+            Route::patch('/suppliers/{supplierId}', [AdminSupplierController::class, 'update'])
+                ->whereNumber('supplierId')
+                ->middleware('agcp.permission:supplier.manage');
+            Route::post('/suppliers/{supplierId}/test', [AdminSupplierController::class, 'testConnection'])
+                ->whereNumber('supplierId')
+                ->middleware('agcp.permission:supplier.manage');
+            Route::post('/suppliers/{supplierId}/sync', [AdminSupplierSyncController::class, 'sync'])
+                ->whereNumber('supplierId')
+                ->middleware('agcp.permission:supplier.manage');
+            Route::get('/suppliers/{supplierId}/inbox', [AdminSupplierSyncController::class, 'inbox'])
+                ->whereNumber('supplierId')
+                ->middleware('agcp.permission:supplier.manage');
+            Route::post('/supplier-inbox/{inboxId}/map', [AdminSupplierRoutingController::class, 'map'])
+                ->whereNumber('inboxId')
+                ->middleware('agcp.permission:supplier.manage');
+
+            Route::get('/deposits', [AdminDepositController::class, 'index'])
+                ->middleware('agcp.permission:wallet.view');
+            Route::post('/deposits/{depositId}/approve', [AdminDepositController::class, 'approve'])
+                ->whereNumber('depositId')
+                ->middleware('agcp.permission:wallet.manage');
         });
     });
 });

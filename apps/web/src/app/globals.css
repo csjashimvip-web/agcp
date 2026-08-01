@@ -344,3 +344,66 @@ tbody tr:hover { background: rgba(255,255,255,.025); }
   .metric-card.wide { grid-column: auto; }
   .nav-list { grid-template-columns: repeat(5, 125px); }
 }
+.write-card {
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.write-card h3 {
+  margin: 6px 0 14px;
+}
+
+.inline-form {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.inline-form input {
+  min-width: 0;
+  border: 1px solid var(--line);
+  color: var(--text);
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 10px 12px;
+  outline: none;
+}
+
+.inline-form input:focus {
+  border-color: rgba(94,230,181,.55);
+  box-shadow: 0 0 0 3px rgba(94,230,181,.07);
+}
+
+.supplier-form {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.success-note {
+  margin: 12px 0 0;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.muted-copy {
+  color: var(--muted);
+  margin: -5px 0 14px;
+  font-size: 13px;
+}
+
+@media (max-width: 1000px) {
+  .inline-form,
+  .supplier-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .inline-form,
+  .supplier-form {
+    grid-template-columns: 1fr;
+  }
+}
