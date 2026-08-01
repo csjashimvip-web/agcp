@@ -64,6 +64,7 @@ const nav = [
   ["/admin/webhooks", "Webhooks"],
   ["/admin/email-providers", "Email"],
   ["/admin/release-candidate", "RC Audit"],
+  ["/admin/rc1", "RC1"],
 ];
 
 export default function AdminShell({ children }: { children: ReactNode }) {

@@ -161,3 +161,70 @@ Schedule::command('agcp:dispatch-email-deliveries')
     ->everyMinute()
     ->withoutOverlapping()
     ->onOneServer();
+
+// AGCP RC1 STABILIZATION V1
+Artisan::command(
+    'agcp:dependency-audit-record
+        {ecosystem}
+        {critical=0}
+        {high=0}
+        {moderate=0}
+        {low=0}
+        {--environment=local}
+        {--path=}
+        {--sha256=}',
+    function (
+        \App\Modules\Reliability\Application\DependencyAuditRecorder $audits
+    ): int {
+        $row = $audits->record(
+            ecosystem: (string) $this->argument('ecosystem'),
+            critical: (int) $this->argument('critical'),
+            high: (int) $this->argument('high'),
+            moderate: (int) $this->argument('moderate'),
+            low: (int) $this->argument('low'),
+            reportPath: $this->option('path') ?: null,
+            reportSha256: $this->option('sha256') ?: null,
+            environment: (string) $this->option('environment'),
+        );
+
+        $this->line(json_encode($row, JSON_PRETTY_PRINT));
+
+        return $row->status === 'passed' ? 0 : 1;
+    }
+)->purpose('Record an AGCP dependency-security audit result.');
+
+Artisan::command(
+    'agcp:security-audit
+        {--environment=staging}
+        {--git-commit=working-tree}',
+    function (
+        \App\Modules\Reliability\Application\SecurityAuditService $security
+    ): int {
+        $row = $security->run(
+            (string) $this->option('environment'),
+            (string) $this->option('git-commit'),
+        );
+
+        $this->line(json_encode($row, JSON_PRETTY_PRINT));
+
+        return $row->status === 'passed' ? 0 : 1;
+    }
+)->purpose('Run the AGCP security release audit.');
+
+Artisan::command(
+    'agcp:staging-acceptance
+        {--git-commit=working-tree}
+        {--environment=staging}',
+    function (
+        \App\Modules\Reliability\Application\StagingAcceptanceService $staging
+    ): int {
+        $row = $staging->run(
+            (string) $this->option('git-commit'),
+            (string) $this->option('environment'),
+        );
+
+        $this->line(json_encode($row, JSON_PRETTY_PRINT));
+
+        return $row->status === 'accepted' ? 0 : 1;
+    }
+)->purpose('Run AGCP staging acceptance gates.');

@@ -46,6 +46,7 @@ use App\Modules\Gateway\Http\Controllers\AdminWebhookController;
 use App\Modules\Mobile\Http\Controllers\MobileBffController;
 use App\Modules\Notifications\Http\Controllers\AdminEmailProviderController;
 use App\Modules\Reliability\Http\Controllers\AdminReleaseCandidateController;
+use App\Modules\Reliability\Http\Controllers\AdminRc1StabilizationController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -653,4 +654,43 @@ Route::prefix('v1')
                 [AdminReleaseCandidateController::class, 'audit']
             )->middleware('agcp.permission:release.audit');
         });
+    });
+
+// AGCP RC1 STABILIZATION V1
+Route::prefix('v1/admin/rc1')
+    ->middleware(['auth:sanctum', 'agcp.tenant'])
+    ->group(function (): void {
+        Route::get(
+            '/',
+            [AdminRc1StabilizationController::class, 'index']
+        )->middleware('agcp.permission:release.audit');
+
+        Route::post(
+            '/security-audit',
+            [AdminRc1StabilizationController::class, 'security']
+        )->middleware('agcp.permission:security.audit');
+
+        Route::post(
+            '/staging-acceptance',
+            [AdminRc1StabilizationController::class, 'staging']
+        )->middleware('agcp.permission:staging.acceptance');
+
+        Route::post(
+            '/cutover',
+            [AdminRc1StabilizationController::class, 'createCutover']
+        )->middleware('agcp.permission:cutover.manage');
+
+        Route::post(
+            '/cutover/{runId}/checks',
+            [AdminRc1StabilizationController::class, 'completeCheck']
+        )
+            ->whereNumber('runId')
+            ->middleware('agcp.permission:cutover.manage');
+
+        Route::post(
+            '/cutover/{runId}/open-traffic',
+            [AdminRc1StabilizationController::class, 'openTraffic']
+        )
+            ->whereNumber('runId')
+            ->middleware('agcp.permission:cutover.manage');
     });

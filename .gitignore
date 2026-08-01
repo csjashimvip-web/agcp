@@ -11,3 +11,4 @@ storage/framework/views/*
 .DS_Store
 Thumbs.db
 .agcp-backups/
+.agcp-audit-output/
