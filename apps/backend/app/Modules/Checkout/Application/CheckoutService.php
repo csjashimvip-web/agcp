@@ -6,6 +6,7 @@ use App\Modules\Catalog\Domain\Models\Product;
 use App\Modules\Inventory\Domain\Models\InventoryItem;
 use App\Modules\Orders\Domain\Models\Order;
 use App\Modules\Orders\Domain\Models\OrderItem;
+use App\Modules\Pricing\Application\PricingEngine;
 use App\Modules\Supplier\Application\Jobs\ExecuteSupplierOrder;
 use App\Modules\Wallet\Application\WalletPostingService;
 use App\Modules\Wallet\Domain\Models\Wallet;
@@ -17,11 +18,16 @@ final class CheckoutService
 {
     public function __construct(
         private readonly WalletPostingService $walletPosting,
+        private readonly PricingEngine $pricing,
     ) {
     }
 
     /**
-     * @param array<int, array{product_id:int,quantity:int,service_input?:array<string,mixed>}> $items
+     * @param array<int, array{
+     *   product_id:int,
+     *   quantity:int,
+     *   service_input?:array<string,mixed>|null
+     * }> $items
      */
     public function checkout(
         int $tenantId,
@@ -29,35 +35,64 @@ final class CheckoutService
         Wallet $wallet,
         array $items,
         string $idempotencyKey,
+        ?string $couponCode = null,
     ): Order {
         if ($wallet->tenant_id !== $tenantId || $wallet->user_id !== $userId) {
-            throw new InvalidArgumentException('Wallet does not belong to the checkout identity.');
+            throw new InvalidArgumentException(
+                'Wallet does not belong to the checkout identity.'
+            );
         }
 
         if ($items === []) {
-            throw new InvalidArgumentException('Checkout requires at least one item.');
+            throw new InvalidArgumentException(
+                'Checkout requires at least one item.'
+            );
         }
 
-        return DB::transaction(function () use ($tenantId, $userId, $wallet, $items, $idempotencyKey): Order {
+        return DB::transaction(function () use (
+            $tenantId,
+            $userId,
+            $wallet,
+            $items,
+            $idempotencyKey,
+            $couponCode,
+        ): Order {
             $existing = Order::query()
                 ->where('tenant_id', $tenantId)
-                ->where('metadata->checkout_idempotency_key', $idempotencyKey)
+                ->where(
+                    'metadata->checkout_idempotency_key',
+                    $idempotencyKey
+                )
                 ->first();
 
             if ($existing) {
-                return $existing;
+                return $existing->load('items');
             }
 
-            $resolved = [];
-            $subtotal = 0;
+            $quote = $this->pricing->quote(
+                tenantId: $tenantId,
+                userId: $userId,
+                items: array_map(
+                    fn (array $line): array => [
+                        'product_id' => (int) $line['product_id'],
+                        'quantity' => max(1, (int) $line['quantity']),
+                    ],
+                    $items
+                ),
+                couponCode: $couponCode,
+            );
 
-            foreach ($items as $line) {
-                $quantity = max(1, (int) $line['quantity']);
+            $resolved = [];
+
+            foreach ($quote['lines'] as $index => $pricedLine) {
+                $sourceLine = $items[$index];
 
                 $product = Product::query()
                     ->where('tenant_id', $tenantId)
                     ->where('status', 'active')
-                    ->findOrFail((int) $line['product_id']);
+                    ->findOrFail((int) $pricedLine['product_id']);
+
+                $quantity = (int) $pricedLine['quantity'];
 
                 $inventory = InventoryItem::query()
                     ->where('tenant_id', $tenantId)
@@ -69,17 +104,20 @@ final class CheckoutService
                     $available = $inventory->on_hand - $inventory->reserved;
 
                     if ($available < $quantity) {
-                        throw new InvalidArgumentException("Insufficient inventory for {$product->sku}.");
+                        throw new InvalidArgumentException(
+                            "Insufficient inventory for {$product->sku}."
+                        );
                     }
 
                     $inventory->increment('reserved', $quantity);
                 }
 
-                $lineTotal = $product->price_minor * $quantity;
-                $subtotal += $lineTotal;
-
-                $resolved[] = compact('product', 'quantity', 'lineTotal') + [
-                    'service_input' => $line['service_input'] ?? null,
+                $resolved[] = [
+                    'product' => $product,
+                    'quantity' => $quantity,
+                    'unit_price_minor' => (int) $pricedLine['unit_price_minor'],
+                    'line_total_minor' => (int) $pricedLine['line_total_minor'],
+                    'service_input' => $sourceLine['service_input'] ?? null,
                 ];
             }
 
@@ -91,10 +129,18 @@ final class CheckoutService
                 'order_number' => 'AGCP-'.now()->format('YmdHis').'-'.Str::upper(Str::random(6)),
                 'status' => 'pending',
                 'currency' => $wallet->currency,
-                'subtotal_minor' => $subtotal,
-                'discount_minor' => 0,
+                'subtotal_minor' => $quote['subtotal_minor'],
+                'discount_minor' => $quote['discount_minor'],
                 'surcharge_minor' => 0,
-                'total_minor' => $subtotal,
+                'tax_minor' => $quote['tax_minor'],
+                'total_minor' => $quote['total_minor'],
+                'coupon_id' => $quote['coupon_id'],
+                'pricing_snapshot' => [
+                    'tier_id' => $quote['tier_id'],
+                    'tier_name' => $quote['tier_name'],
+                    'coupon_code' => $quote['coupon_code'],
+                    'lines' => $quote['lines'],
+                ],
                 'metadata' => [
                     'checkout_idempotency_key' => $idempotencyKey,
                 ],
@@ -107,9 +153,9 @@ final class CheckoutService
                     'sku' => $line['product']->sku,
                     'name' => $line['product']->name,
                     'quantity' => $line['quantity'],
-                    'unit_price_minor' => $line['product']->price_minor,
+                    'unit_price_minor' => $line['unit_price_minor'],
                     'unit_cost_minor' => $line['product']->cost_minor,
-                    'line_total_minor' => $line['lineTotal'],
+                    'line_total_minor' => $line['line_total_minor'],
                     'service_input' => $line['service_input'],
                     'fulfillment_status' => 'pending',
                 ]);
@@ -117,12 +163,25 @@ final class CheckoutService
 
             $ledger = $this->walletPosting->debitWallet(
                 wallet: $wallet,
-                amountMinor: $subtotal,
+                amountMinor: (int) $quote['total_minor'],
                 idempotencyKey: 'checkout:'.$idempotencyKey,
                 referenceType: 'order',
                 referenceId: (string) $order->id,
                 description: 'Checkout debit for '.$order->order_number,
             );
+
+            if ($quote['coupon_id']) {
+                DB::table('coupon_redemptions')->insert([
+                    'tenant_id' => $tenantId,
+                    'coupon_id' => $quote['coupon_id'],
+                    'user_id' => $userId,
+                    'order_id' => $order->id,
+                    'discount_minor' => $quote['discount_minor'],
+                    'redeemed_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
 
             $order->forceFill([
                 'status' => 'confirmed',
@@ -139,6 +198,9 @@ final class CheckoutService
                 'payload' => json_encode([
                     'order_id' => $order->id,
                     'order_uuid' => $order->order_uuid,
+                    'subtotal_minor' => $order->subtotal_minor,
+                    'discount_minor' => $order->discount_minor,
+                    'tax_minor' => $order->tax_minor,
                     'total_minor' => $order->total_minor,
                     'currency' => $order->currency,
                 ], JSON_THROW_ON_ERROR),
@@ -149,7 +211,8 @@ final class CheckoutService
             ]);
 
             foreach ($order->items as $orderItem) {
-                ExecuteSupplierOrder::dispatch($orderItem->id)->afterCommit();
+                ExecuteSupplierOrder::dispatch($orderItem->id)
+                    ->afterCommit();
             }
 
             return $order->fresh('items');

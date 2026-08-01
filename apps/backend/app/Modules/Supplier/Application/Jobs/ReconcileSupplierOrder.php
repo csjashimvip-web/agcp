@@ -2,6 +2,7 @@
 
 namespace App\Modules\Supplier\Application\Jobs;
 
+use App\Modules\Marketplace\Application\CommissionAccrualService;
 use App\Modules\Orders\Domain\Models\OrderItem;
 use App\Modules\Supplier\Application\Contracts\SupplierProviderFactory;
 use App\Modules\Supplier\Domain\Models\Supplier;
@@ -121,6 +122,9 @@ final class ReconcileSupplierOrder implements ShouldQueue
                 'completed_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            app(CommissionAccrualService::class)
+                ->accrueForOrder($orderId);
 
             return;
         }

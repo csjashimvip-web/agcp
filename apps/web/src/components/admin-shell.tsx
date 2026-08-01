@@ -44,6 +44,9 @@ const nav = [
   ["/admin/supplier-orders", "Supplier Orders"],
   ["/admin/operations", "Operations"],
   ["/admin/reseller-api", "Reseller API"],
+  ["/admin/pricing", "Pricing"],
+  ["/admin/marketplace", "Marketplace"],
+  ["/admin/analytics", "Analytics"],
 ];
 
 export default function AdminShell({ children }: { children: ReactNode }) {

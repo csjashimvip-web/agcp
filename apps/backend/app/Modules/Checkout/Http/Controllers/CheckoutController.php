@@ -18,6 +18,7 @@ final class CheckoutController
         $validated = $request->validate([
             'wallet_id' => ['required', 'integer', 'exists:wallets,id'],
             'idempotency_key' => ['required', 'string', 'max:160'],
+            'coupon_code' => ['nullable', 'string', 'max:64'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
@@ -33,6 +34,7 @@ final class CheckoutController
             wallet: $wallet,
             items: $validated['items'],
             idempotencyKey: $validated['idempotency_key'],
+            couponCode: $validated['coupon_code'] ?? null,
         );
 
         return response()->json([

@@ -20,6 +20,9 @@ use App\Modules\Supplier\Http\Controllers\AdminSupplierRoutingController;
 use App\Modules\Supplier\Http\Controllers\AdminSupplierSyncController;
 use App\Modules\Tenancy\Http\Controllers\TenantController;
 use App\Modules\Wallet\Http\Controllers\AdminDepositController;
+use App\Modules\Analytics\Http\Controllers\AdminAnalyticsController;
+use App\Modules\Marketplace\Http\Controllers\AdminMarketplaceController;
+use App\Modules\Pricing\Http\Controllers\AdminPricingController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -201,6 +204,58 @@ Route::prefix('v1')->group(function (): void {
             )
                 ->whereNumber('clientId')
                 ->middleware('agcp.permission:gateway.manage');
+
+            Route::get(
+                '/pricing',
+                [AdminPricingController::class, 'index']
+            )->middleware('agcp.permission:catalog.manage');
+
+            Route::post(
+                '/pricing/tiers',
+                [AdminPricingController::class, 'createTier']
+            )->middleware('agcp.permission:catalog.manage');
+
+            Route::post(
+                '/pricing/tiers/assign',
+                [AdminPricingController::class, 'assignTier']
+            )->middleware('agcp.permission:catalog.manage');
+
+            Route::post(
+                '/pricing/tiers/{tierId}/prices',
+                [AdminPricingController::class, 'setTierPrice']
+            )
+                ->whereNumber('tierId')
+                ->middleware('agcp.permission:catalog.manage');
+
+            Route::post(
+                '/pricing/coupons',
+                [AdminPricingController::class, 'createCoupon']
+            )->middleware('agcp.permission:catalog.manage');
+
+            Route::post(
+                '/pricing/tax-rules',
+                [AdminPricingController::class, 'createTaxRule']
+            )->middleware('agcp.permission:catalog.manage');
+
+            Route::get(
+                '/marketplace',
+                [AdminMarketplaceController::class, 'index']
+            )->middleware('agcp.permission:catalog.manage');
+
+            Route::post(
+                '/marketplace/sellers',
+                [AdminMarketplaceController::class, 'createSeller']
+            )->middleware('agcp.permission:catalog.manage');
+
+            Route::post(
+                '/marketplace/listings',
+                [AdminMarketplaceController::class, 'createListing']
+            )->middleware('agcp.permission:catalog.manage');
+
+            Route::get(
+                '/analytics',
+                AdminAnalyticsController::class
+            )->middleware('agcp.permission:platform.architecture.view');
         });
     });
 });
