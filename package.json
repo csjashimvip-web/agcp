@@ -1,0 +1,10 @@
+{
+  "name": "agcp-2026-2027",
+  "private": true,
+  "version": "2026.8.0",
+  "scripts": {
+    "web:dev": "npm --prefix apps/web run dev",
+    "web:build": "npm --prefix apps/web run build",
+    "web:lint": "npm --prefix apps/web run lint"
+  }
+}
