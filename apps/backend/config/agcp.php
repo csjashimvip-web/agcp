@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'external_delivery_enabled' => (bool) env('AGCP_EXTERNAL_DELIVERY_ENABLED', false),
     'version' => '2026-2027-master',
     'architecture' => 'modular-monolith-event-driven',
 

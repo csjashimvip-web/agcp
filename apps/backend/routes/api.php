@@ -42,6 +42,10 @@ use App\Modules\Platform\Http\Controllers\AdminDeploymentController;
 use App\Modules\Platform\Http\Controllers\PrivacyController;
 use App\Modules\Reliability\Http\Controllers\AdminReliabilityController;
 use App\Modules\Reliability\Http\Controllers\PublicReadinessController;
+use App\Modules\Gateway\Http\Controllers\AdminWebhookController;
+use App\Modules\Mobile\Http\Controllers\MobileBffController;
+use App\Modules\Notifications\Http\Controllers\AdminEmailProviderController;
+use App\Modules\Reliability\Http\Controllers\AdminReleaseCandidateController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -570,5 +574,83 @@ Route::prefix('v1')
                 '/deployments',
                 [AdminDeploymentController::class, 'record']
             )->middleware('agcp.permission:deployment.manage');
+        });
+    });
+
+// AGCP MOBILE WEBHOOK EMAIL RC V1
+Route::prefix('mobile/v1')
+    ->middleware(['auth:sanctum', 'agcp.tenant'])
+    ->group(function (): void {
+        Route::get(
+            '/bootstrap',
+            [MobileBffController::class, 'bootstrap']
+        );
+
+        Route::get(
+            '/catalog',
+            [MobileBffController::class, 'catalog']
+        );
+
+        Route::get(
+            '/orders',
+            [MobileBffController::class, 'orders']
+        );
+
+        Route::get(
+            '/notifications',
+            [MobileBffController::class, 'notifications']
+        );
+
+        Route::post(
+            '/devices',
+            [MobileBffController::class, 'registerDevice']
+        );
+    });
+
+Route::prefix('v1')
+    ->middleware(['auth:sanctum', 'agcp.tenant'])
+    ->group(function (): void {
+        Route::prefix('admin')->group(function (): void {
+            Route::get(
+                '/webhooks',
+                [AdminWebhookController::class, 'index']
+            )->middleware('agcp.permission:webhooks.manage');
+
+            Route::post(
+                '/webhooks',
+                [AdminWebhookController::class, 'store']
+            )->middleware('agcp.permission:webhooks.manage');
+
+            Route::post(
+                '/webhooks/{subscriptionId}/toggle-delivery',
+                [AdminWebhookController::class, 'toggle']
+            )
+                ->whereNumber('subscriptionId')
+                ->middleware('agcp.permission:webhooks.manage');
+
+            Route::get(
+                '/email-providers',
+                [AdminEmailProviderController::class, 'index']
+            )->middleware('agcp.permission:email.manage');
+
+            Route::post(
+                '/email-providers',
+                [AdminEmailProviderController::class, 'store']
+            )->middleware('agcp.permission:email.manage');
+
+            Route::get(
+                '/release-candidate',
+                [AdminReleaseCandidateController::class, 'index']
+            )->middleware('agcp.permission:release.audit');
+
+            Route::post(
+                '/release-candidate/performance',
+                [AdminReleaseCandidateController::class, 'performance']
+            )->middleware('agcp.permission:performance.manage');
+
+            Route::post(
+                '/release-candidate/audit',
+                [AdminReleaseCandidateController::class, 'audit']
+            )->middleware('agcp.permission:release.audit');
         });
     });
