@@ -57,6 +57,10 @@ const nav = [
   ["/admin/plugins", "Plugins"],
   ["/admin/automation", "Automation"],
   ["/admin/notification-channels", "Channels"],
+  ["/admin/reliability", "Reliability"],
+  ["/admin/privacy", "Privacy"],
+  ["/admin/data-ops", "Data Ops"],
+  ["/admin/deployments", "Deployments"],
 ];
 
 export default function AdminShell({ children }: { children: ReactNode }) {

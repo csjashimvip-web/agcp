@@ -37,6 +37,11 @@ use App\Modules\Licensing\Http\Controllers\AdminLicenseController;
 use App\Modules\Notifications\Http\Controllers\AdminNotificationChannelController;
 use App\Modules\Plugins\Http\Controllers\AdminPluginController;
 use App\Modules\SaaS\Http\Controllers\AdminSaaSController;
+use App\Modules\Platform\Http\Controllers\AdminDataOperationsController;
+use App\Modules\Platform\Http\Controllers\AdminDeploymentController;
+use App\Modules\Platform\Http\Controllers\PrivacyController;
+use App\Modules\Reliability\Http\Controllers\AdminReliabilityController;
+use App\Modules\Reliability\Http\Controllers\PublicReadinessController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -489,5 +494,81 @@ Route::prefix('v1')
                 '/notification-channels',
                 [AdminNotificationChannelController::class, 'store']
             )->middleware('agcp.permission:notifications.channels.manage');
+        });
+    });
+
+// AGCP ENTERPRISE HARDENING V1
+Route::get(
+    '/v1/platform/readiness',
+    PublicReadinessController::class
+);
+
+Route::prefix('v1')
+    ->middleware(['auth:sanctum', 'agcp.tenant'])
+    ->group(function (): void {
+        Route::prefix('customer')->group(function (): void {
+            Route::get(
+                '/privacy',
+                [PrivacyController::class, 'customerIndex']
+            );
+
+            Route::post(
+                '/privacy',
+                [PrivacyController::class, 'customerStore']
+            );
+        });
+
+        Route::prefix('admin')->group(function (): void {
+            Route::get(
+                '/reliability',
+                [AdminReliabilityController::class, 'index']
+            )->middleware('agcp.permission:reliability.manage');
+
+            Route::post(
+                '/reliability/slos',
+                [AdminReliabilityController::class, 'createSlo']
+            )->middleware('agcp.permission:reliability.manage');
+
+            Route::get(
+                '/privacy',
+                [PrivacyController::class, 'adminIndex']
+            )->middleware('agcp.permission:privacy.manage');
+
+            Route::patch(
+                '/privacy/{requestId}',
+                [PrivacyController::class, 'adminReview']
+            )
+                ->whereNumber('requestId')
+                ->middleware('agcp.permission:privacy.manage');
+
+            Route::get(
+                '/data-ops',
+                [AdminDataOperationsController::class, 'index']
+            )->middleware('agcp.permission:data.manage');
+
+            Route::post(
+                '/data-ops/exports',
+                [AdminDataOperationsController::class, 'export']
+            )->middleware('agcp.permission:data.manage');
+
+            Route::post(
+                '/data-ops/imports/catalog',
+                [AdminDataOperationsController::class, 'importCatalog']
+            )->middleware('agcp.permission:data.manage');
+
+            Route::post(
+                '/data-ops/retention',
+                [AdminDataOperationsController::class, 'saveRetention']
+            )->middleware('agcp.permission:data.manage');
+
+            Route::get(
+                '/deployments',
+                [AdminDeploymentController::class, 'index']
+            )->middleware('agcp.permission:deployment.manage');
+
+            Route::post(
+                '/deployments',
+                [AdminDeploymentController::class, 'record']
+            )->middleware('agcp.permission:deployment.manage');
         });
     });
