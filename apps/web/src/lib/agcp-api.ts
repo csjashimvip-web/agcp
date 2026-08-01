@@ -13,8 +13,10 @@ function readCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
 
   const prefix = `${name}=`;
+
   for (const part of document.cookie.split(";")) {
     const value = part.trim();
+
     if (value.startsWith(prefix)) {
       return decodeURIComponent(value.slice(prefix.length));
     }
@@ -37,7 +39,7 @@ export async function ensureCsrfCookie(): Promise<void> {
 export async function apiFetch<T>(
   path: string,
   options: RequestInit = {},
-  tenantId?: number | null,
+  tenant?: number | string | null,
 ): Promise<T> {
   const headers = new Headers(options.headers);
 
@@ -47,11 +49,12 @@ export async function apiFetch<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  if (tenantId) {
-    headers.set("X-AGCP-Tenant", String(tenantId));
+  if (tenant !== undefined && tenant !== null && String(tenant) !== "") {
+    headers.set("X-AGCP-Tenant", String(tenant));
   }
 
   const method = (options.method || "GET").toUpperCase();
+
   if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
     const token = readCookie("XSRF-TOKEN");
     if (token) headers.set("X-XSRF-TOKEN", token);
@@ -74,7 +77,9 @@ export async function apiFetch<T>(
     const message =
       payload?.message ||
       payload?.errors?.email?.[0] ||
+      payload?.errors?.wallet?.[0] ||
       `Request failed with status ${response.status}.`;
+
     throw new Error(message);
   }
 

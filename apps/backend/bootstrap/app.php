@@ -1,5 +1,8 @@
 <?php
 
+use App\Modules\Gateway\Http\Middleware\AuthenticateResellerApi;
+use App\Modules\Gateway\Http\Middleware\LogResellerApiRequest;
+use App\Modules\Gateway\Http\Middleware\RequireResellerApiAbility;
 use App\Modules\Identity\Http\Middleware\RequirePermission;
 use App\Modules\Tenancy\Http\Middleware\ResolveTenant;
 use Illuminate\Foundation\Application;
@@ -19,6 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'agcp.tenant' => ResolveTenant::class,
             'agcp.permission' => RequirePermission::class,
+            'agcp.reseller' => AuthenticateResellerApi::class,
+            'agcp.api_ability' => RequireResellerApiAbility::class,
+            'agcp.api_log' => LogResellerApiRequest::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

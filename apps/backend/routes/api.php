@@ -1,13 +1,17 @@
 <?php
 
 use App\Modules\Catalog\Http\Controllers\AdminProductController;
+use App\Modules\Catalog\Http\Controllers\StorefrontController;
 use App\Modules\Checkout\Http\Controllers\CheckoutController;
+use App\Modules\Gateway\Http\Controllers\AdminResellerApiClientController;
+use App\Modules\Gateway\Http\Controllers\ResellerApiController;
 use App\Modules\Identity\Http\Controllers\AuthController;
 use App\Modules\Notifications\Http\Controllers\NotificationController;
 use App\Modules\Orders\Http\Controllers\AdminOrderActionController;
 use App\Modules\Payments\Http\Controllers\PaymentWebhookController;
 use App\Modules\Platform\Http\Controllers\AdminOverviewController;
 use App\Modules\Platform\Http\Controllers\AdminResourceController;
+use App\Modules\Platform\Http\Controllers\CustomerAccountController;
 use App\Modules\Platform\Http\Controllers\PlatformController;
 use App\Modules\Reliability\Http\Controllers\AdminOperationsHealthController;
 use App\Modules\Supplier\Http\Controllers\AdminSupplierController;
@@ -20,6 +24,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
     Route::get('/platform', [PlatformController::class, 'show']);
+
+    Route::get(
+        '/storefront/{tenantSlug}/catalog',
+        [StorefrontController::class, 'catalog']
+    );
 
     Route::middleware('web')->prefix('auth')->group(function (): void {
         Route::post('/login', [AuthController::class, 'login']);
@@ -46,6 +55,16 @@ Route::prefix('v1')->group(function (): void {
 
     Route::middleware(['auth:sanctum', 'agcp.tenant'])->group(function (): void {
         Route::post('/checkout', CheckoutController::class);
+
+        Route::prefix('customer')->group(function (): void {
+            Route::get('/wallets', [CustomerAccountController::class, 'wallets']);
+            Route::get('/orders', [CustomerAccountController::class, 'orders']);
+            Route::get('/deposits', [CustomerAccountController::class, 'deposits']);
+            Route::post(
+                '/deposits',
+                [CustomerAccountController::class, 'requestDeposit']
+            );
+        });
 
         Route::prefix('admin')->group(function (): void {
             Route::get('/overview', AdminOverviewController::class)
@@ -165,6 +184,47 @@ Route::prefix('v1')->group(function (): void {
             )
                 ->whereNumber('supplierOrderId')
                 ->middleware('agcp.permission:supplier.manage');
+
+            Route::get(
+                '/reseller-api-clients',
+                [AdminResellerApiClientController::class, 'index']
+            )->middleware('agcp.permission:gateway.manage');
+
+            Route::post(
+                '/reseller-api-clients',
+                [AdminResellerApiClientController::class, 'store']
+            )->middleware('agcp.permission:gateway.manage');
+
+            Route::post(
+                '/reseller-api-clients/{clientId}/revoke',
+                [AdminResellerApiClientController::class, 'revoke']
+            )
+                ->whereNumber('clientId')
+                ->middleware('agcp.permission:gateway.manage');
         });
     });
 });
+
+Route::prefix('reseller/v1')
+    ->middleware([
+        'agcp.reseller',
+        'throttle:reseller-api',
+        'agcp.api_log',
+    ])
+    ->group(function (): void {
+        Route::get('/services', [ResellerApiController::class, 'services'])
+            ->middleware('agcp.api_ability:services:read');
+
+        Route::get('/balance', [ResellerApiController::class, 'balance'])
+            ->middleware('agcp.api_ability:wallet:read');
+
+        Route::post('/orders', [ResellerApiController::class, 'placeOrder'])
+            ->middleware('agcp.api_ability:orders:create');
+
+        Route::get('/orders', [ResellerApiController::class, 'orders'])
+            ->middleware('agcp.api_ability:orders:read');
+
+        Route::get('/orders/{orderId}', [ResellerApiController::class, 'order'])
+            ->whereNumber('orderId')
+            ->middleware('agcp.api_ability:orders:read');
+    });

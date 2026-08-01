@@ -4,6 +4,18 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/lib/agcp-api";
 
+function safeNextPath(): string {
+  if (typeof window === "undefined") return "/admin";
+
+  const value = new URLSearchParams(window.location.search).get("next");
+
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return "/admin";
+  }
+
+  return value;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -18,7 +30,7 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      router.replace("/admin");
+      router.replace(safeNextPath());
       router.refresh();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Login failed.");
@@ -34,13 +46,12 @@ export default function LoginPage() {
           <span className="brand-mark large">A</span>
           <div>
             <p className="eyebrow">AGCP 2026â€“2027</p>
-            <h1>Command Center</h1>
+            <h1>Secure Sign In</h1>
           </div>
         </div>
 
         <p className="login-copy">
-          Secure access to tenant operations, commerce, wallets and supplier
-          orchestration.
+          Access your customer account or authorized administration workspace.
         </p>
 
         <form onSubmit={submit} className="login-form">
