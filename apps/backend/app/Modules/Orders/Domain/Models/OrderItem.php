@@ -3,6 +3,7 @@
 namespace App\Modules\Orders\Domain\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class OrderItem extends Model
 {
@@ -28,5 +29,10 @@ final class OrderItem extends Model
             'line_total_minor' => 'integer',
             'service_input' => 'array',
         ];
+    }
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
     }
 }

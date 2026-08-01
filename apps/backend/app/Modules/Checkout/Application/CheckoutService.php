@@ -6,6 +6,7 @@ use App\Modules\Catalog\Domain\Models\Product;
 use App\Modules\Inventory\Domain\Models\InventoryItem;
 use App\Modules\Orders\Domain\Models\Order;
 use App\Modules\Orders\Domain\Models\OrderItem;
+use App\Modules\Supplier\Application\Jobs\ExecuteSupplierOrder;
 use App\Modules\Wallet\Application\WalletPostingService;
 use App\Modules\Wallet\Domain\Models\Wallet;
 use Illuminate\Support\Facades\DB;
@@ -146,6 +147,10 @@ final class CheckoutService
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            foreach ($order->items as $orderItem) {
+                ExecuteSupplierOrder::dispatch($orderItem->id)->afterCommit();
+            }
 
             return $order->fresh('items');
         }, 3);
