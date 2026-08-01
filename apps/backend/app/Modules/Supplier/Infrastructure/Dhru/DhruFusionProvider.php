@@ -33,15 +33,20 @@ final class DhruFusionProvider implements DhruCompatibleProvider
 
         $account = $response['SUCCESS'][0]['AccoutInfo']
             ?? $response['SUCCESS'][0]['AccountInfo']
+            ?? $response['SUCCESS'][0]['Account']
             ?? $response['SUCCESS']['AccoutInfo']
             ?? $response['SUCCESS']['AccountInfo']
+            ?? $response['SUCCESS']['Account']
             ?? null;
 
         if (! is_array($account)) {
             return null;
         }
 
-        $raw = $account['creditraw'] ?? $account['balance'] ?? null;
+        $raw = $account['creditraw']
+            ?? $account['balance']
+            ?? $account['credit']
+            ?? null;
 
         if ($raw === null || ! is_numeric($raw)) {
             return null;
@@ -55,22 +60,22 @@ final class DhruFusionProvider implements DhruCompatibleProvider
 
     public function submit(array $payload): array
     {
-        $parameters = $this->toDhruXml($payload);
         $response = $this->call('placeimeiorder', [
-            'parameters' => $parameters,
+            'parameters' => $this->toDhruXml($payload),
         ]);
 
-        $success = $response['SUCCESS'][0]
-            ?? $response['SUCCESS']
-            ?? null;
+        $success = $this->successPayload($response);
 
-        $externalOrderId = is_array($success)
-            ? (string) ($success['REFERENCEID'] ?? $success['referenceid'] ?? '')
-            : '';
+        $externalOrderId = (string) (
+            $success['REFERENCEID']
+            ?? $success['referenceid']
+            ?? $success['ID']
+            ?? ''
+        );
 
         if ($externalOrderId === '') {
             throw new RuntimeException(
-                'Dhru supplier did not return a REFERENCEID.'
+                'Dhru supplier did not return a reference/order ID.'
             );
         }
 
@@ -89,15 +94,22 @@ final class DhruFusionProvider implements DhruCompatibleProvider
             ]),
         ]);
 
-        $success = $response['SUCCESS'][0]
-            ?? $response['SUCCESS']
-            ?? [];
+        $success = $this->successPayload($response);
+
+        $rawStatus = $success['STATUS']
+            ?? $success['Status']
+            ?? $success['status']
+            ?? 'pending';
+
+        $result = $success['CODE']
+            ?? $success['RESULT']
+            ?? $success['Result']
+            ?? $success['result']
+            ?? null;
 
         return [
-            'status' => strtolower((string) (
-                is_array($success) ? ($success['STATUS'] ?? 'pending') : 'pending'
-            )),
-            'result' => is_array($success) ? ($success['CODE'] ?? null) : null,
+            'status' => $this->normalizeStatus($rawStatus),
+            'result' => $result,
             'raw' => $response,
         ];
     }
@@ -132,13 +144,46 @@ final class DhruFusionProvider implements DhruCompatibleProvider
 
         $error = $data['ERROR'][0]['MESSAGE']
             ?? $data['ERROR']['MESSAGE']
-            ?? null;
+            ?? (is_string($data['ERROR'] ?? null) ? $data['ERROR'] : null);
 
         if (is_string($error) && $error !== '') {
             throw new RuntimeException('Dhru API error: '.$error);
         }
 
         return $data;
+    }
+
+    /**
+     * @param array<string, mixed> $response
+     * @return array<string, mixed>
+     */
+    private function successPayload(array $response): array
+    {
+        $success = $response['SUCCESS'][0]
+            ?? $response['SUCCESS']
+            ?? null;
+
+        if (! is_array($success)) {
+            throw new RuntimeException('Dhru API response has no SUCCESS payload.');
+        }
+
+        if (isset($success['LIST']) && is_array($success['LIST'])) {
+            return $success['LIST'];
+        }
+
+        return $success;
+    }
+
+    private function normalizeStatus(mixed $status): string
+    {
+        $value = strtolower(trim((string) $status));
+
+        return match ($value) {
+            '3', 'completed', 'complete', 'success', 'successful', 'done' => 'completed',
+            '2', 'rejected', 'reject', 'failed', 'failure', 'cancelled', 'canceled' => 'failed',
+            '1', 'processing', 'in process', 'in_process', 'progress' => 'processing',
+            default => 'pending',
+        };
     }
 
     private function endpoint(): string
@@ -166,7 +211,11 @@ final class DhruFusionProvider implements DhruCompatibleProvider
 
             $xml->addChild(
                 strtoupper((string) $key),
-                htmlspecialchars((string) $value, ENT_XML1 | ENT_QUOTES, 'UTF-8')
+                htmlspecialchars(
+                    (string) $value,
+                    ENT_XML1 | ENT_QUOTES,
+                    'UTF-8'
+                )
             );
         }
 

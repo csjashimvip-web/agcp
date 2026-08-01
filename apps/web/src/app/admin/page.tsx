@@ -11,6 +11,11 @@ type Overview = {
   orders: number;
   suppliers: number;
   wallet_liability_minor: number;
+  pending_supplier_orders: number;
+  failed_supplier_orders: number;
+  pending_deposits: number;
+  unmapped_supplier_services: number;
+  pending_outbox_events: number;
 };
 
 export default function AdminOverviewPage() {
@@ -42,11 +47,16 @@ export default function AdminOverviewPage() {
     };
   }, [tenantId]);
 
-  const cards = [
+  const metrics = [
     ["Active members", data?.users ?? 0],
     ["Products", data?.products ?? 0],
     ["Orders", data?.orders ?? 0],
     ["Active suppliers", data?.suppliers ?? 0],
+    ["Supplier orders pending", data?.pending_supplier_orders ?? 0],
+    ["Supplier orders failed", data?.failed_supplier_orders ?? 0],
+    ["Deposits pending", data?.pending_deposits ?? 0],
+    ["Services unmapped", data?.unmapped_supplier_services ?? 0],
+    ["Outbox events pending", data?.pending_outbox_events ?? 0],
   ];
 
   return (
@@ -55,21 +65,24 @@ export default function AdminOverviewPage() {
         <div>
           <p className="eyebrow">Operational intelligence</p>
           <h2>Overview</h2>
-          <p>Live tenant-level visibility across the transactional core.</p>
+          <p>
+            Tenant-level commerce, supplier fulfillment and financial workflow
+            visibility.
+          </p>
         </div>
       </div>
 
       {error && <div className="error-banner">{error}</div>}
 
-      <div className="metric-grid">
-        {cards.map(([label, value]) => (
+      <div className="metric-grid operations-grid">
+        {metrics.map(([label, value]) => (
           <article className="metric-card" key={String(label)}>
             <span>{label}</span>
             <strong>{value}</strong>
           </article>
         ))}
 
-        <article className="metric-card wide">
+        <article className="metric-card">
           <span>Wallet liability (minor units)</span>
           <strong>
             {(data?.wallet_liability_minor ?? 0).toLocaleString()}
@@ -78,11 +91,12 @@ export default function AdminOverviewPage() {
       </div>
 
       <article className="architecture-card">
-        <p className="eyebrow">Architecture status</p>
-        <h3>Event-driven modular commerce core</h3>
+        <p className="eyebrow">Fulfillment control</p>
+        <h3>Provider-independent supplier orchestration</h3>
         <p>
-          Tenant isolation, double-entry ledger, supplier routing/failover,
-          signed payment webhooks and versioned APIs are active boundaries.
+          Supplier orders are queued, routed through provider adapters and
+          reconciled asynchronously. Failed fulfillment is moved to
+          attention-required state instead of silently altering wallet money.
         </p>
       </article>
     </div>
