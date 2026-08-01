@@ -3,6 +3,7 @@
 namespace App\Modules\Checkout\Application;
 
 use App\Modules\Catalog\Domain\Models\Product;
+use App\Modules\Fraud\Application\FraudGuard;
 use App\Modules\Inventory\Domain\Models\InventoryItem;
 use App\Modules\Orders\Domain\Models\Order;
 use App\Modules\Orders\Domain\Models\OrderItem;
@@ -19,6 +20,7 @@ final class CheckoutService
     public function __construct(
         private readonly WalletPostingService $walletPosting,
         private readonly PricingEngine $pricing,
+        private readonly FraudGuard $fraud,
     ) {
     }
 
@@ -48,6 +50,38 @@ final class CheckoutService
                 'Checkout requires at least one item.'
             );
         }
+
+        $existing = Order::query()
+            ->where('tenant_id', $tenantId)
+            ->where(
+                'metadata->checkout_idempotency_key',
+                $idempotencyKey
+            )
+            ->first();
+
+        if ($existing) {
+            return $existing->load('items');
+        }
+
+        $preview = $this->pricing->quote(
+            tenantId: $tenantId,
+            userId: $userId,
+            items: array_map(
+                fn (array $line): array => [
+                    'product_id' => (int) $line['product_id'],
+                    'quantity' => max(1, (int) $line['quantity']),
+                ],
+                $items
+            ),
+            couponCode: $couponCode,
+        );
+
+        $this->fraud->assertCheckoutAllowed(
+            tenantId: $tenantId,
+            userId: $userId,
+            quoteTotalMinor: (int) $preview['total_minor'],
+            fingerprint: $tenantId.':'.$userId,
+        );
 
         return DB::transaction(function () use (
             $tenantId,
@@ -131,7 +165,7 @@ final class CheckoutService
                 'currency' => $wallet->currency,
                 'subtotal_minor' => $quote['subtotal_minor'],
                 'discount_minor' => $quote['discount_minor'],
-                'surcharge_minor' => 0,
+                'surcharge_minor' => $quote['surcharge_minor'],
                 'tax_minor' => $quote['tax_minor'],
                 'total_minor' => $quote['total_minor'],
                 'coupon_id' => $quote['coupon_id'],
@@ -139,6 +173,9 @@ final class CheckoutService
                     'tier_id' => $quote['tier_id'],
                     'tier_name' => $quote['tier_name'],
                     'coupon_code' => $quote['coupon_code'],
+                    'coupon_discount_minor' => $quote['coupon_discount_minor'],
+                    'rule_discount_minor' => $quote['rule_discount_minor'],
+                    'pricing_rules' => $quote['pricing_rules'],
                     'lines' => $quote['lines'],
                 ],
                 'metadata' => [

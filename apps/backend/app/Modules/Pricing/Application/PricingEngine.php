@@ -10,23 +10,7 @@ final class PricingEngine
 {
     /**
      * @param array<int, array{product_id:int,quantity:int}> $items
-     * @return array{
-     *   lines:array<int,array{
-     *     product_id:int,
-     *     quantity:int,
-     *     unit_price_minor:int,
-     *     line_total_minor:int,
-     *     base_unit_price_minor:int
-     *   }>,
-     *   subtotal_minor:int,
-     *   discount_minor:int,
-     *   tax_minor:int,
-     *   total_minor:int,
-     *   coupon_id:?int,
-     *   coupon_code:?string,
-     *   tier_id:?int,
-     *   tier_name:?string
-     * }
+     * @return array<string,mixed>
      */
     public function quote(
         int $tenantId,
@@ -35,7 +19,6 @@ final class PricingEngine
         ?string $couponCode = null,
     ): array {
         $tier = $this->activeTier($tenantId, $userId);
-
         $lines = [];
         $subtotal = 0;
 
@@ -48,9 +31,9 @@ final class PricingEngine
                 ->findOrFail((int) $line['product_id']);
 
             $unitPrice = $this->tierPrice(
-                product: $product,
-                tierId: $tier?->id,
-                defaultDiscountBps: $tier?->default_discount_bps ?? 0,
+                $product,
+                $tier?->id,
+                $tier?->default_discount_bps ?? 0,
             );
 
             $lineTotal = $unitPrice * $quantity;
@@ -66,17 +49,32 @@ final class PricingEngine
         }
 
         $coupon = $this->resolveCoupon(
-            tenantId: $tenantId,
-            userId: $userId,
-            couponCode: $couponCode,
-            subtotalMinor: $subtotal,
+            $tenantId,
+            $userId,
+            $couponCode,
+            $subtotal,
         );
 
-        $discount = $coupon
+        $couponDiscount = $coupon
             ? $this->couponDiscount($coupon, $subtotal)
             : 0;
 
-        $taxable = max(0, $subtotal - $discount);
+        $ruleResult = $this->advancedRules(
+            $tenantId,
+            $tier?->id,
+            $subtotal,
+        );
+
+        $discount = min(
+            $subtotal + $ruleResult['surcharge_minor'],
+            $couponDiscount + $ruleResult['discount_minor']
+        );
+
+        $taxable = max(
+            0,
+            $subtotal + $ruleResult['surcharge_minor'] - $discount
+        );
+
         $taxRule = $this->activeTaxRule($tenantId);
         $tax = $taxRule
             ? $this->basisPoints($taxable, (int) $taxRule->rate_bps)
@@ -86,12 +84,16 @@ final class PricingEngine
             'lines' => $lines,
             'subtotal_minor' => $subtotal,
             'discount_minor' => $discount,
+            'coupon_discount_minor' => $couponDiscount,
+            'rule_discount_minor' => $ruleResult['discount_minor'],
+            'surcharge_minor' => $ruleResult['surcharge_minor'],
             'tax_minor' => $tax,
             'total_minor' => max(0, $taxable + $tax),
             'coupon_id' => $coupon?->id,
             'coupon_code' => $coupon?->code,
             'tier_id' => $tier?->id,
             'tier_name' => $tier?->name,
+            'pricing_rules' => $ruleResult['rules'],
         ];
     }
 
@@ -109,22 +111,12 @@ final class PricingEngine
             ->where('reseller_tier_memberships.status', 'active')
             ->where('reseller_tiers.status', 'active')
             ->where(function ($query): void {
-                $query
-                    ->whereNull('reseller_tier_memberships.starts_at')
-                    ->orWhere(
-                        'reseller_tier_memberships.starts_at',
-                        '<=',
-                        now()
-                    );
+                $query->whereNull('reseller_tier_memberships.starts_at')
+                    ->orWhere('reseller_tier_memberships.starts_at', '<=', now());
             })
             ->where(function ($query): void {
-                $query
-                    ->whereNull('reseller_tier_memberships.ends_at')
-                    ->orWhere(
-                        'reseller_tier_memberships.ends_at',
-                        '>=',
-                        now()
-                    );
+                $query->whereNull('reseller_tier_memberships.ends_at')
+                    ->orWhere('reseller_tier_memberships.ends_at', '>=', now());
             })
             ->orderBy('reseller_tiers.priority')
             ->first([
@@ -156,12 +148,14 @@ final class PricingEngine
             ? (int) $override->discount_bps
             : $defaultDiscountBps;
 
-        $discount = $this->basisPoints(
-            (int) $product->price_minor,
-            $discountBps
+        return max(
+            0,
+            (int) $product->price_minor
+                - $this->basisPoints(
+                    (int) $product->price_minor,
+                    $discountBps
+                )
         );
-
-        return max(0, (int) $product->price_minor - $discount);
     }
 
     private function resolveCoupon(
@@ -181,13 +175,11 @@ final class PricingEngine
             ->where('code', $code)
             ->where('status', 'active')
             ->where(function ($query): void {
-                $query
-                    ->whereNull('starts_at')
+                $query->whereNull('starts_at')
                     ->orWhere('starts_at', '<=', now());
             })
             ->where(function ($query): void {
-                $query
-                    ->whereNull('ends_at')
+                $query->whereNull('ends_at')
                     ->orWhere('ends_at', '>=', now());
             })
             ->first();
@@ -200,7 +192,9 @@ final class PricingEngine
 
         if ($subtotalMinor < (int) $coupon->min_subtotal_minor) {
             throw ValidationException::withMessages([
-                'coupon_code' => ['Order subtotal does not meet the coupon minimum.'],
+                'coupon_code' => [
+                    'Order subtotal does not meet the coupon minimum.',
+                ],
             ]);
         }
 
@@ -224,7 +218,9 @@ final class PricingEngine
 
             if ($usedByUser >= (int) $coupon->per_user_limit) {
                 throw ValidationException::withMessages([
-                    'coupon_code' => ['Coupon usage limit for this account has been reached.'],
+                    'coupon_code' => [
+                        'Coupon usage limit for this account has been reached.',
+                    ],
                 ]);
             }
         }
@@ -246,19 +242,96 @@ final class PricingEngine
         return min($subtotalMinor, max(0, $discount));
     }
 
+    /**
+     * @return array{
+     *   discount_minor:int,
+     *   surcharge_minor:int,
+     *   rules:array<int,array<string,mixed>>
+     * }
+     */
+    private function advancedRules(
+        int $tenantId,
+        ?int $tierId,
+        int $subtotalMinor,
+    ): array {
+        $rules = DB::table('pricing_rules')
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'active')
+            ->where('min_subtotal_minor', '<=', $subtotalMinor)
+            ->where(function ($query) use ($subtotalMinor): void {
+                $query->whereNull('max_subtotal_minor')
+                    ->orWhere('max_subtotal_minor', '>=', $subtotalMinor);
+            })
+            ->where(function ($query) use ($tierId): void {
+                $query->whereNull('reseller_tier_id');
+
+                if ($tierId) {
+                    $query->orWhere('reseller_tier_id', $tierId);
+                }
+            })
+            ->where(function ($query): void {
+                $query->whereNull('starts_at')
+                    ->orWhere('starts_at', '<=', now());
+            })
+            ->where(function ($query): void {
+                $query->whereNull('ends_at')
+                    ->orWhere('ends_at', '>=', now());
+            })
+            ->orderBy('priority')
+            ->get();
+
+        $discount = 0;
+        $surcharge = 0;
+        $applied = [];
+
+        foreach ($rules as $rule) {
+            $value = $rule->value_type === 'percent'
+                ? $this->basisPoints(
+                    $subtotalMinor,
+                    (int) ($rule->rate_bps ?? 0)
+                )
+                : (int) ($rule->amount_minor ?? 0);
+
+            $value = max(0, $value);
+
+            if ($rule->effect === 'discount') {
+                $discount += $value;
+            } elseif ($rule->effect === 'surcharge') {
+                $surcharge += $value;
+            } else {
+                continue;
+            }
+
+            $applied[] = [
+                'id' => (int) $rule->id,
+                'code' => (string) $rule->code,
+                'effect' => (string) $rule->effect,
+                'value_minor' => $value,
+            ];
+
+            if (! $rule->stackable) {
+                break;
+            }
+        }
+
+        return [
+            'discount_minor' => min($subtotalMinor, $discount),
+            'surcharge_minor' => $surcharge,
+            'rules' => $applied,
+        ];
+    }
+
     private function activeTaxRule(int $tenantId): ?object
     {
         return DB::table('tax_rules')
             ->where('tenant_id', $tenantId)
             ->where('status', 'active')
             ->where(function ($query): void {
-                $query
-                    ->whereNull('starts_at')
+                $query->whereNull('starts_at')
                     ->orWhere('starts_at', '<=', now());
             })
             ->where(function ($query): void {
-                $query
-                    ->whereNull('ends_at')
+                $query->whereNull('ends_at')
                     ->orWhere('ends_at', '>=', now());
             })
             ->orderBy('priority')

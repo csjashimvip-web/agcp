@@ -6,6 +6,11 @@ use Illuminate\Support\Facades\DB;
 
 final class CommissionAccrualService
 {
+    public function __construct(
+        private readonly CommissionLedgerService $ledger,
+    ) {
+    }
+
     public function accrueForOrder(int $orderId): int
     {
         $order = DB::table('orders')->where('id', $orderId)->first();
@@ -42,15 +47,19 @@ final class CommissionAccrualService
                 continue;
             }
 
-            $exists = DB::table('commission_accruals')
+            $existing = DB::table('commission_accruals')
                 ->where('order_item_id', $item->id)
                 ->where(
                     'marketplace_seller_id',
                     $listing->marketplace_seller_id
                 )
-                ->exists();
+                ->first();
 
-            if ($exists) {
+            if ($existing) {
+                if (! $existing->accrual_ledger_transaction_id) {
+                    $this->ledger->ensureAccrualPosted((int) $existing->id);
+                }
+
                 continue;
             }
 
@@ -64,7 +73,7 @@ final class CommissionAccrualService
                 continue;
             }
 
-            DB::table('commission_accruals')->insert([
+            $accrualId = DB::table('commission_accruals')->insertGetId([
                 'tenant_id' => $order->tenant_id,
                 'order_id' => $order->id,
                 'order_item_id' => $item->id,
@@ -79,6 +88,7 @@ final class CommissionAccrualService
                 'updated_at' => now(),
             ]);
 
+            $this->ledger->ensureAccrualPosted($accrualId);
             $created++;
         }
 

@@ -23,6 +23,14 @@ use App\Modules\Wallet\Http\Controllers\AdminDepositController;
 use App\Modules\Analytics\Http\Controllers\AdminAnalyticsController;
 use App\Modules\Marketplace\Http\Controllers\AdminMarketplaceController;
 use App\Modules\Pricing\Http\Controllers\AdminPricingController;
+use App\Modules\Fraud\Http\Controllers\AdminFraudController;
+use App\Modules\Marketplace\Http\Controllers\AdminCommissionController;
+use App\Modules\Pricing\Http\Controllers\AdminPricingRuleController;
+use App\Modules\Reliability\Http\Controllers\AdminAuditExplorerController;
+use App\Modules\Support\Http\Controllers\AdminSupportController;
+use App\Modules\Support\Http\Controllers\CustomerSupportController;
+use App\Modules\Wallet\Http\Controllers\AdminPayoutController;
+use App\Modules\Wallet\Http\Controllers\CustomerPayoutController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -282,4 +290,105 @@ Route::prefix('reseller/v1')
         Route::get('/orders/{orderId}', [ResellerApiController::class, 'order'])
             ->whereNumber('orderId')
             ->middleware('agcp.api_ability:orders:read');
+    });
+
+// AGCP FINANCIAL RISK SUPPORT V1
+Route::prefix('v1')
+    ->middleware(['auth:sanctum', 'agcp.tenant'])
+    ->group(function (): void {
+        Route::prefix('customer')->group(function (): void {
+            Route::get('/payouts', [CustomerPayoutController::class, 'index']);
+            Route::post('/payouts', [CustomerPayoutController::class, 'store']);
+
+            Route::get('/support', [CustomerSupportController::class, 'index']);
+            Route::post('/support', [CustomerSupportController::class, 'store']);
+            Route::post(
+                '/support/{ticketId}/messages',
+                [CustomerSupportController::class, 'reply']
+            )->whereNumber('ticketId');
+        });
+
+        Route::prefix('admin')->group(function (): void {
+            Route::get(
+                '/commissions',
+                [AdminCommissionController::class, 'index']
+            )->middleware('agcp.permission:marketplace.manage');
+
+            Route::post(
+                '/commissions/sellers/{sellerId}/settle',
+                [AdminCommissionController::class, 'settle']
+            )
+                ->whereNumber('sellerId')
+                ->middleware('agcp.permission:payouts.manage');
+
+            Route::get(
+                '/payouts',
+                [AdminPayoutController::class, 'index']
+            )->middleware('agcp.permission:payouts.manage');
+
+            Route::post(
+                '/payouts/{payoutId}/approve',
+                [AdminPayoutController::class, 'approve']
+            )
+                ->whereNumber('payoutId')
+                ->middleware('agcp.permission:payouts.manage');
+
+            Route::post(
+                '/payouts/{payoutId}/reject',
+                [AdminPayoutController::class, 'reject']
+            )
+                ->whereNumber('payoutId')
+                ->middleware('agcp.permission:payouts.manage');
+
+            Route::post(
+                '/payouts/{payoutId}/paid',
+                [AdminPayoutController::class, 'paid']
+            )
+                ->whereNumber('payoutId')
+                ->middleware('agcp.permission:payouts.manage');
+
+            Route::get(
+                '/pricing-rules',
+                [AdminPricingRuleController::class, 'index']
+            )->middleware('agcp.permission:pricing.manage');
+
+            Route::post(
+                '/pricing-rules',
+                [AdminPricingRuleController::class, 'store']
+            )->middleware('agcp.permission:pricing.manage');
+
+            Route::get(
+                '/fraud',
+                [AdminFraudController::class, 'index']
+            )->middleware('agcp.permission:fraud.manage');
+
+            Route::post(
+                '/fraud/rules',
+                [AdminFraudController::class, 'storeRule']
+            )->middleware('agcp.permission:fraud.manage');
+
+            Route::get(
+                '/support',
+                [AdminSupportController::class, 'index']
+            )->middleware('agcp.permission:support.manage');
+
+            Route::post(
+                '/support/{ticketId}/reply',
+                [AdminSupportController::class, 'reply']
+            )
+                ->whereNumber('ticketId')
+                ->middleware('agcp.permission:support.manage');
+
+            Route::patch(
+                '/support/{ticketId}',
+                [AdminSupportController::class, 'update']
+            )
+                ->whereNumber('ticketId')
+                ->middleware('agcp.permission:support.manage');
+
+            Route::get(
+                '/audit',
+                AdminAuditExplorerController::class
+            )->middleware('agcp.permission:reliability.audit.view');
+        });
     });

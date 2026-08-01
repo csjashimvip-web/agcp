@@ -38,6 +38,8 @@ const nav = [
   ["/account/orders", "Orders"],
   ["/account/wallet", "Wallet"],
   ["/account/notifications", "Notifications"],
+  ["/account/payouts", "Payouts"],
+  ["/account/support", "Support"],
 ];
 
 function requestedTenantFromBrowser(): string | null {

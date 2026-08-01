@@ -812,3 +812,12 @@ tbody tr:hover { background: rgba(255,255,255,.025); }
     grid-template-columns: 1fr;
   }
 }
+.form-stack textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  color: var(--text);
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 10px 12px;
+  resize: vertical;
+}
