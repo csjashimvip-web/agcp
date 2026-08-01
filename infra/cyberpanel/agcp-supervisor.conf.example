@@ -1,0 +1,27 @@
+; AGCP 2026-2027 Supervisor template
+; Replace paths/user values for the actual CyberPanel server.
+
+[program:agcp-queue]
+process_name=%(program_name)s_%(process_num)02d
+command=/usr/bin/php /home/AGCP_USER/public_html/apps/backend/artisan queue:work redis --queue=supplier,default --sleep=1 --tries=3 --timeout=120
+directory=/home/AGCP_USER/public_html/apps/backend
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=AGCP_USER
+numprocs=2
+redirect_stderr=true
+stdout_logfile=/home/AGCP_USER/logs/agcp-queue.log
+stopwaitsecs=130
+
+[program:agcp-scheduler]
+command=/usr/bin/php /home/AGCP_USER/public_html/apps/backend/artisan schedule:work
+directory=/home/AGCP_USER/public_html/apps/backend
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=AGCP_USER
+redirect_stderr=true
+stdout_logfile=/home/AGCP_USER/logs/agcp-scheduler.log

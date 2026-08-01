@@ -3,10 +3,13 @@
 use App\Modules\Catalog\Http\Controllers\AdminProductController;
 use App\Modules\Checkout\Http\Controllers\CheckoutController;
 use App\Modules\Identity\Http\Controllers\AuthController;
+use App\Modules\Notifications\Http\Controllers\NotificationController;
+use App\Modules\Orders\Http\Controllers\AdminOrderActionController;
 use App\Modules\Payments\Http\Controllers\PaymentWebhookController;
 use App\Modules\Platform\Http\Controllers\AdminOverviewController;
 use App\Modules\Platform\Http\Controllers\AdminResourceController;
 use App\Modules\Platform\Http\Controllers\PlatformController;
+use App\Modules\Reliability\Http\Controllers\AdminOperationsHealthController;
 use App\Modules\Supplier\Http\Controllers\AdminSupplierController;
 use App\Modules\Supplier\Http\Controllers\AdminSupplierOperationsController;
 use App\Modules\Supplier\Http\Controllers\AdminSupplierRoutingController;
@@ -26,8 +29,15 @@ Route::prefix('v1')->group(function (): void {
             ->middleware('auth:sanctum');
     });
 
-    Route::get('/tenants', [TenantController::class, 'index'])
-        ->middleware('auth:sanctum');
+    Route::middleware('auth:sanctum')->group(function (): void {
+        Route::get('/tenants', [TenantController::class, 'index']);
+
+        Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::post(
+            '/notifications/{notificationId}/read',
+            [NotificationController::class, 'read']
+        )->whereNumber('notificationId');
+    });
 
     Route::post(
         '/payments/webhooks/{providerId}',
@@ -41,6 +51,9 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/overview', AdminOverviewController::class)
                 ->middleware('agcp.permission:platform.architecture.view');
 
+            Route::get('/operations/health', AdminOperationsHealthController::class)
+                ->middleware('agcp.permission:reliability.audit.view');
+
             Route::get('/products', [AdminResourceController::class, 'products'])
                 ->middleware('agcp.permission:catalog.manage');
             Route::post('/products', [AdminProductController::class, 'store'])
@@ -53,6 +66,18 @@ Route::prefix('v1')->group(function (): void {
                 ->middleware('agcp.permission:catalog.manage');
 
             Route::get('/orders', [AdminResourceController::class, 'orders'])
+                ->middleware('agcp.permission:orders.manage');
+            Route::post(
+                '/orders/{orderId}/cancel',
+                [AdminOrderActionController::class, 'cancel']
+            )
+                ->whereNumber('orderId')
+                ->middleware('agcp.permission:orders.manage');
+            Route::post(
+                '/orders/{orderId}/retry',
+                [AdminOrderActionController::class, 'retry']
+            )
+                ->whereNumber('orderId')
                 ->middleware('agcp.permission:orders.manage');
 
             Route::get('/wallets', [AdminResourceController::class, 'wallets'])
