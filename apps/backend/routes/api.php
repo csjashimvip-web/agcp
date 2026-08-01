@@ -31,6 +31,12 @@ use App\Modules\Support\Http\Controllers\AdminSupportController;
 use App\Modules\Support\Http\Controllers\CustomerSupportController;
 use App\Modules\Wallet\Http\Controllers\AdminPayoutController;
 use App\Modules\Wallet\Http\Controllers\CustomerPayoutController;
+use App\Modules\Automation\Http\Controllers\AdminAutomationController;
+use App\Modules\Gateway\Http\Controllers\DeveloperPortalController;
+use App\Modules\Licensing\Http\Controllers\AdminLicenseController;
+use App\Modules\Notifications\Http\Controllers\AdminNotificationChannelController;
+use App\Modules\Plugins\Http\Controllers\AdminPluginController;
+use App\Modules\SaaS\Http\Controllers\AdminSaaSController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -390,5 +396,98 @@ Route::prefix('v1')
                 '/audit',
                 AdminAuditExplorerController::class
             )->middleware('agcp.permission:reliability.audit.view');
+        });
+    });
+
+// AGCP SAAS LICENSING PLUGINS AUTOMATION V1
+Route::get(
+    '/developer/openapi.json',
+    [DeveloperPortalController::class, 'openApi']
+);
+
+Route::prefix('v1')
+    ->middleware(['auth:sanctum', 'agcp.tenant'])
+    ->group(function (): void {
+        Route::prefix('admin')->group(function (): void {
+            Route::get(
+                '/saas',
+                [AdminSaaSController::class, 'index']
+            )->middleware('agcp.permission:saas.manage');
+
+            Route::post(
+                '/saas/plans',
+                [AdminSaaSController::class, 'createPlan']
+            )->middleware('agcp.permission:saas.manage');
+
+            Route::post(
+                '/saas/subscription',
+                [AdminSaaSController::class, 'subscribe']
+            )->middleware('agcp.permission:saas.manage');
+
+            Route::get(
+                '/licensing',
+                [AdminLicenseController::class, 'index']
+            )->middleware('agcp.permission:licensing.manage');
+
+            Route::post(
+                '/licensing/licenses',
+                [AdminLicenseController::class, 'issue']
+            )->middleware('agcp.permission:licensing.manage');
+
+            Route::post(
+                '/licensing/licenses/{licenseId}/revoke',
+                [AdminLicenseController::class, 'revoke']
+            )
+                ->whereNumber('licenseId')
+                ->middleware('agcp.permission:licensing.manage');
+
+            Route::get(
+                '/plugins',
+                [AdminPluginController::class, 'index']
+            )->middleware('agcp.permission:plugins.manage');
+
+            Route::post(
+                '/plugins/manifests',
+                [AdminPluginController::class, 'registerManifest']
+            )->middleware('agcp.permission:plugins.manage');
+
+            Route::post(
+                '/plugins/{manifestId}/enable',
+                [AdminPluginController::class, 'enable']
+            )
+                ->whereNumber('manifestId')
+                ->middleware('agcp.permission:plugins.manage');
+
+            Route::post(
+                '/plugins/{manifestId}/disable',
+                [AdminPluginController::class, 'disable']
+            )
+                ->whereNumber('manifestId')
+                ->middleware('agcp.permission:plugins.manage');
+
+            Route::get(
+                '/automation',
+                [AdminAutomationController::class, 'index']
+            )->middleware('agcp.permission:automation.manage');
+
+            Route::post(
+                '/automation/rules',
+                [AdminAutomationController::class, 'store']
+            )->middleware('agcp.permission:automation.manage');
+
+            Route::post(
+                '/automation/simulate',
+                [AdminAutomationController::class, 'simulate']
+            )->middleware('agcp.permission:automation.manage');
+
+            Route::get(
+                '/notification-channels',
+                [AdminNotificationChannelController::class, 'index']
+            )->middleware('agcp.permission:notifications.channels.manage');
+
+            Route::post(
+                '/notification-channels',
+                [AdminNotificationChannelController::class, 'store']
+            )->middleware('agcp.permission:notifications.channels.manage');
         });
     });
